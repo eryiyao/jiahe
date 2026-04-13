@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>出货单</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --ink:#1a1a1a; --sub:#666; --line:#d0d0d0; --bg:#f4f4f2; --paper:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5}
+.app{max-width:780px;margin:0 auto;padding:16px 14px 120px}
+h1{font-size:16px;font-weight:600;margin-bottom:10px;color:#333;letter-spacing:.5px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:14px}
+label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:4px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+input:focus,textarea:focus{outline:none;border-color:#888}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.row.full{grid-template-columns:1fr}
+.items .item{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:5px;margin-bottom:8px;align-items:center}
+.items .item input,.items .item select{padding:8px 6px;font-size:13px}
+.items .hdr{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:5px;font-size:11px;color:var(--sub);margin-bottom:4px;padding:0 2px}
+.del{background:#fafafa;border:1px solid var(--line);border-radius:4px;height:36px;font-size:18px;color:#999;cursor:pointer}
+.btn{background:#1a1a1a;color:#fff;border:none;border-radius:4px;padding:11px 16px;font-size:14px;cursor:pointer;width:100%;margin-top:6px}
+.btn.sec{background:#fff;color:#1a1a1a;border:1px solid #1a1a1a}
+.btn.sm{padding:7px 10px;font-size:12px;width:auto;margin-top:0}
+.lib-btn{background:#fff;border:1px solid var(--line);color:#333;border-radius:4px;padding:6px 10px;font-size:12px;cursor:pointer}
+.mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:flex-end;justify-content:center}
+.mask.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:780px;max-height:85vh;border-radius:12px 12px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.x{background:none;border:none;font-size:24px;color:#999;cursor:pointer;line-height:1;padding:0 4px}
+.sheet-tools{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid #eee;flex-wrap:wrap}
+.lib-list{overflow-y:auto;padding:8px 12px 16px;flex:1}
+.lib-row{display:grid;grid-template-columns:1fr 60px 70px 28px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px dashed #eee}
+.lib-row input{padding:7px 8px;font-size:13px}
+.suggest{display:none;position:absolute;background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:240px;overflow-y:auto;z-index:200;min-width:200px}
+.suggest.show{display:block}
+.suggest .s-item{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #f3f3f3}
+.suggest .s-item:last-child{border-bottom:none}
+.suggest .s-item:hover,.suggest .s-item.active{background:#f5f5f3}
+.suggest .s-name{flex:1;color:#222}
+.suggest .s-meta{color:#888;font-size:11px;font-family:-apple-system,sans-serif;flex-shrink:0}
+.suggest .s-empty{padding:12px;color:#999;font-size:12px;text-align:center}
+
+/* 签名 */
+.sig-wrap{border:1px dashed var(--line);border-radius:4px;background:#fff;position:relative}
+#sigPad{display:block;width:100%;height:120px;touch-action:none}
+.sig-clear{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--sub);font-size:12px;cursor:pointer}
+
+/* 预览 ===== 简洁商务 · 精修版 ===== */
+#preview{background:#fff;color:#111;padding:40px 34px 34px;font-family:"SimSun","Songti SC","Noto Serif CJK SC",serif;width:100%;position:relative}
+#preview::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#111 0%,#111 35%,#c9a961 35%,#c9a961 42%,#111 42%,#111 100%)}
+#preview .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+#preview .brand-mark{width:38px;height:38px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:serif;flex-shrink:0}
+#preview .brand-name{font-size:16px;font-weight:600;letter-spacing:3px;line-height:1.2}
+#preview .brand-phone{font-size:11px;color:#777;letter-spacing:1px;margin-top:2px;font-family:-apple-system,sans-serif}
+#preview .title-wrap{text-align:center;margin:22px 0 18px;position:relative}
+#preview .doc-title{display:inline-block;font-size:26px;font-weight:700;letter-spacing:12px;padding:0 20px;background:#fff;position:relative;z-index:1}
+#preview .title-wrap::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#111}
+#preview .doc-sub{text-align:center;font-size:10px;color:#999;letter-spacing:4px;margin-top:-2px;font-family:-apple-system,sans-serif}
+#preview .meta{display:flex;justify-content:space-between;margin:20px 0 14px;font-size:12.5px;gap:16px}
+#preview .meta .m-l,#preview .meta .m-r{flex:1}
+#preview .meta .m-r{text-align:right}
+#preview .meta .k{color:#888;margin-right:4px;font-size:11px}
+#preview .meta div{margin-bottom:5px}
+#preview table{width:100%;border-collapse:collapse;font-size:12.5px}
+#preview th,#preview td{border:1px solid #bbb;padding:9px 5px;text-align:center}
+#preview thead th{background:#111;color:#fff;font-weight:500;letter-spacing:1px;border-color:#111;padding:10px 5px;font-size:12px}
+#preview td.name{text-align:left;padding-left:12px}
+#preview tbody tr:nth-child(even) td{background:#fafafa}
+#preview tfoot td{font-weight:700;background:#f0f0f0;padding:11px 5px;border-color:#111;font-size:13px}
+#preview .total-cn{font-size:12.5px;padding:11px 12px;background:#fafafa;border:1px solid #bbb;border-top:none;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#preview .total-cn .k{color:#888;font-size:11px;letter-spacing:1px;flex-shrink:0}
+#preview .total-cn .v{font-weight:600;letter-spacing:1px;text-align:right}
+#preview .remark{margin-top:14px;font-size:11.5px;color:#555;min-height:30px;padding:8px 10px;border-left:2px solid #c9a961;background:#fcfbf7}
+#preview .foot{display:flex;justify-content:flex-end;margin-top:30px;font-size:11px}
+#preview .foot .blk{width:55%;min-width:180px}
+#preview .foot .sig-line{border-bottom:1px solid #111;height:58px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px}
+#preview .foot .sig-line img{max-height:54px;max-width:100%}
+#preview .foot .lbl{text-align:center;font-size:10.5px;color:#888;margin-top:5px;letter-spacing:2px;font-family:-apple-system,sans-serif}
+
+@media(max-width:420px){
+  .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 26px}
+  #preview{padding:28px 18px 22px}
+  #preview .doc-title{font-size:22px;letter-spacing:8px;padding:0 12px}
+  #preview .brand-name{font-size:14px;letter-spacing:2px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>出货单 · 录入</h1>
+
+  <div class="card">
+    <div class="row full"><div><label>店铺抬头</label><input id="shop" placeholder="例：小芳服饰辅料"></div></div>
+    <div class="row">
+      <div><label>本店电话</label><input id="phone" placeholder="联系电话"></div>
+      <div><label>客户名称</label><input id="cust" placeholder="客户名"></div>
+    </div>
+    <div class="row">
+      <div><label>单号</label><input id="no"></div>
+      <div><label>日期</label><input id="date" type="date"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <label style="margin:0">商品明细</label>
+      <button class="lib-btn" onclick="openLib()">📋 辅料库</button>
+    </div>
+    <div class="items" id="items">
+      <div class="hdr"><div>品名 / 规格</div><div>数量</div><div>单位</div><div>单价</div><div></div></div>
+    </div>
+    <button class="btn sec" onclick="addItem()">+ 添加一行</button>
+  </div>
+
+  <!-- 辅料库弹层 -->
+  <div id="libMask" class="mask" onclick="if(event.target===this)closeLib()">
+    <div class="sheet">
+      <div class="sheet-head">
+        <div style="font-weight:600;font-size:15px">辅料库</div>
+        <button class="x" onclick="closeLib()">×</button>
+      </div>
+      <div class="sheet-tools">
+        <button class="btn sec sm" onclick="libAdd()">+ 新增</button>
+        <button class="btn sec sm" onclick="libPaste()">📋 批量粘贴</button>
+        <button class="btn sec sm" onclick="libExportFile()">导出文件</button>
+        <button class="btn sec sm" onclick="document.getElementById('libImport').click()">导入文件</button>
+        <input id="libImport" type="file" accept=".json,.txt,.csv" style="display:none" onchange="libImportFile(event)">
+      </div>
+      <div id="libList" class="lib-list"></div>
+      <div id="pasteBox" style="display:none;padding:14px;border-top:1px solid #eee;background:#fafafa">
+        <div style="font-size:12px;color:#666;margin-bottom:6px">每行一条，格式：<code style="background:#fff;padding:1px 5px;border:1px solid #ddd;border-radius:3px">品名 | 单位 | 单价</code>。分隔符可用 <code style="background:#fff;padding:1px 5px;border:1px solid #ddd;border-radius:3px">|</code> 或 <code style="background:#fff;padding:1px 5px;border:1px solid #ddd;border-radius:3px">,</code> 或 制表符（从飞书/Excel 直接复制即可）。</div>
+        <textarea id="pasteArea" rows="8" style="width:100%;border:1px solid var(--line);border-radius:4px;padding:10px;font-size:13px;font-family:monospace" placeholder="吊牌 | 张 | 0.42&#10;主唛 | 张 | 0.21&#10;..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;flex:1"><input type="checkbox" id="pasteReplace" style="width:auto">覆盖现有库（不勾则追加）</label>
+          <button class="btn sec sm" onclick="closePaste()">取消</button>
+          <button class="btn sm" style="background:#1a1a1a;color:#fff;width:auto" onclick="libPasteApply()">导入</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 品名搜索下拉 -->
+  <div id="suggest" class="suggest"></div>
+
+  <div class="card">
+    <label>备注</label>
+    <textarea id="remark" rows="2" placeholder="如快递单号、收货地址等"></textarea>
+  </div>
+
+  <div class="card">
+    <label>经手人 / 签名</label>
+    <input id="signer" placeholder="经手人姓名" style="margin-bottom:8px">
+    <div class="sig-wrap">
+      <canvas id="sigPad"></canvas>
+      <button class="sig-clear" onclick="clearSig()">清除</button>
+    </div>
+  </div>
+
+  <h1>预览</h1>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div id="preview"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn" onclick="exportPNG()">导出图片</button>
+    <button class="btn sec" onclick="exportPDF()">导出 PDF</button>
+  </div>
+</div>
+
+<script>
+// ---------- 辅料库 ----------
+const LIB_KEY='chuhuodan_lib_v1';
+let LIB=[];
+const DEFAULT_LIB=[
+  {name:'吊牌',unit:'张',price:0.42},
+  {name:'主唛',unit:'张',price:0.21},
+  {name:'洗水唛',unit:'张',price:0.25},
+  {name:'码唛',unit:'张',price:0.09},
+  {name:'BR唛',unit:'张',price:0.12},
+  {name:'CO唛',unit:'张',price:0.12},
+  {name:'Lana',unit:'张',price:0.15},
+  {name:'Lana mohair',unit:'张',price:0.15},
+  {name:'Lana seta',unit:'张',price:0.15},
+  {name:'大金属标',unit:'个',price:4.5},
+  {name:'小金属标',unit:'个',price:0.6},
+];
+function loadLib(){
+  try{const d=JSON.parse(localStorage.getItem(LIB_KEY)||'null');LIB=Array.isArray(d)?d:DEFAULT_LIB.slice()}
+  catch(e){LIB=DEFAULT_LIB.slice()}
+}
+function saveLib(){try{localStorage.setItem(LIB_KEY,JSON.stringify(LIB))}catch(e){}}
+function openLib(){document.getElementById('libMask').classList.add('show');closePaste();renderLib()}
+function closeLib(){document.getElementById('libMask').classList.remove('show')}
+function libPaste(){document.getElementById('pasteBox').style.display='block';setTimeout(()=>document.getElementById('pasteArea').focus(),50)}
+function closePaste(){document.getElementById('pasteBox').style.display='none';document.getElementById('pasteArea').value='';document.getElementById('pasteReplace').checked=false}
+function parseLines(text){
+  const out=[];
+  text.split(/\r?\n/).forEach(line=>{
+    const s=line.trim();if(!s)return;
+    // 跳过表头行
+    if(/^品名/.test(s))return;
+    const parts=s.split(/[|,\t]/).map(x=>x.trim()).filter(Boolean);
+    if(parts.length<2)return;
+    const name=parts[0];
+    let unit='张',price=0;
+    if(parts.length===2){
+      // 品名 + 单价(数字) 或 品名 + 单位
+      if(!isNaN(Number(parts[1])))price=Number(parts[1]);else unit=parts[1];
+    }else{
+      unit=parts[1]||'张';
+      price=Number(parts[2])||0;
+    }
+    out.push({name,unit,price});
+  });
+  return out;
+}
+function libPasteApply(){
+  const txt=document.getElementById('pasteArea').value;
+  const items=parseLines(txt);
+  if(items.length===0){alert('没解析到有效条目');return}
+  const replace=document.getElementById('pasteReplace').checked;
+  const action=replace?'覆盖':'追加';
+  if(!confirm('解析到 '+items.length+' 条，确认'+action+'？'))return;
+  if(replace)LIB=items;else LIB=LIB.concat(items);
+  saveLib();renderLib();closePaste();
+}
+function renderLib(){
+  const box=document.getElementById('libList');
+  box.innerHTML=LIB.map((it,i)=>`
+    <div class="lib-row">
+      <input value="${esc(it.name)}" placeholder="品名" oninput="libUpd(${i},'name',this.value)">
+      <input value="${esc(it.unit)}" placeholder="单位" oninput="libUpd(${i},'unit',this.value)">
+      <input type="number" inputmode="decimal" value="${it.price}" placeholder="单价" oninput="libUpd(${i},'price',this.value)">
+      <button class="del" onclick="libDel(${i})">×</button>
+    </div>`).join('')||'<div style="padding:30px;text-align:center;color:#999;font-size:13px">还没有辅料，点上方"+ 新增"</div>';
+}
+function libUpd(i,k,v){LIB[i][k]=k==='price'?(Number(v)||0):v;saveLib()}
+function libDel(i){if(confirm('删除「'+LIB[i].name+'」？'))LIB.splice(i,1),saveLib(),renderLib()}
+function libAdd(){LIB.push({name:'',unit:'张',price:0});saveLib();renderLib();
+  setTimeout(()=>{const inputs=document.querySelectorAll('#libList .lib-row input');if(inputs.length)inputs[inputs.length-4].focus()},50)}
+function libExportFile(){
+  const blob=new Blob([JSON.stringify(LIB,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='辅料库_'+todayStr()+'.json';a.click();
+}
+function libImportFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      let d;
+      const txt=r.result;
+      if(f.name.endsWith('.json')){
+        d=JSON.parse(txt);
+        if(!Array.isArray(d))throw 0;
+      }else{
+        // 当作文本格式解析（txt/csv）
+        d=parseLines(txt);
+        if(d.length===0)throw 0;
+      }
+      if(confirm('导入 '+d.length+' 条辅料，覆盖现有辅料库？'))LIB=d,saveLib(),renderLib();
+    }catch(err){alert('文件格式不对')}
+  };r.readAsText(f);e.target.value='';
+}
+
+// ---------- 品名搜索下拉 ----------
+let suggestIdx=-1, suggestFor=null;
+function showSuggest(input,itemIdx){
+  const sg=document.getElementById('suggest');
+  const q=(input.value||'').trim().toLowerCase();
+  const matches=LIB.filter(l=>l.name&&l.name.toLowerCase().includes(q)).slice(0,8);
+  suggestFor=itemIdx;suggestIdx=-1;
+  if(matches.length===0&&q===''){hideSuggest();return}
+  if(matches.length===0){
+    sg.innerHTML='<div class="s-empty">无匹配，按当前输入即可</div>';
+  }else{
+    sg.innerHTML=matches.map((m,i)=>`<div class="s-item" data-i="${i}" onmousedown="pickSuggest(${itemIdx},${LIB.indexOf(m)})"><span class="s-name">${esc(m.name)}</span><span class="s-meta">${esc(m.unit)} · ¥${m.price}</span></div>`).join('');
+  }
+  const r=input.getBoundingClientRect();
+  sg.style.left=(r.left+window.scrollX)+'px';
+  sg.style.top=(r.bottom+window.scrollY+2)+'px';
+  sg.style.minWidth=Math.max(220,r.width+120)+'px';
+  sg.classList.add('show');
+}
+function hideSuggest(){document.getElementById('suggest').classList.remove('show');suggestFor=null}
+function pickSuggest(itemIdx,libIdx){
+  const it=LIB[libIdx];
+  S.items[itemIdx].name=it.name;
+  S.items[itemIdx].unit=it.unit;
+  S.items[itemIdx].price=it.price;
+  save();renderItems();renderPreview();hideSuggest();
+}
+
+
+const S = {
+  shop:'', phone:'', no:'', date:'', cust:'', remark:'', signer:'',
+  items:[]
+};
+const LS='chuhuodan_v1';
+
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(LS)||'{}');Object.assign(S,d)}catch(e){}}
+
+// ---------- 单号 & 日期 ----------
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function genNo(){const d=new Date();return d.getFullYear().toString().slice(2)+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(Math.floor(Math.random()*900+100))}
+
+// ---------- 明细 ----------
+function addItem(data){
+  const it=data||{name:'',qty:'',unit:'个',price:''};
+  if(!it.unit)it.unit='个';
+  S.items.push(it);
+  renderItems();
+}
+const UNITS=['个','件','套','卷','米','打','包','条','盒','kg','自定义'];
+function renderItems(){
+  const box=document.getElementById('items');
+  box.querySelectorAll('.item').forEach(n=>n.remove());
+  S.items.forEach((it,i)=>{
+    const row=document.createElement('div');row.className='item';
+    const inList=UNITS.includes(it.unit);
+    const opts=UNITS.map(u=>`<option value="${u}" ${(!inList&&u==='自定义')||u===it.unit?'selected':''}>${u}</option>`).join('');
+    row.innerHTML=`
+      <input placeholder="品名 规格" value="${esc(it.name)}" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i})" onblur="setTimeout(hideSuggest,200)">
+      <input type="number" inputmode="decimal" placeholder="数量" value="${it.qty}" oninput="upd(${i},'qty',this.value)">
+      <select onchange="unitChg(${i},this.value)">${opts}</select>
+      <input type="number" inputmode="decimal" placeholder="单价" value="${it.price}" oninput="upd(${i},'price',this.value)">
+      <button class="del" onclick="delItem(${i})">×</button>`;
+    box.appendChild(row);
+    if(!inList&&it.unit){
+      const sel=row.querySelector('select');
+      const custom=document.createElement('input');
+      custom.value=it.unit;custom.placeholder='单位';custom.style.cssText='padding:8px 4px;font-size:13px';
+      custom.oninput=e=>{S.items[i].unit=e.target.value;save();renderPreview()};
+      sel.replaceWith(custom);
+    }
+  });
+}
+function unitChg(i,v){
+  if(v==='自定义'){S.items[i].unit='';save();renderItems();renderPreview();return}
+  S.items[i].unit=v;save();renderPreview();
+}
+function upd(i,k,v){S.items[i][k]=v;save();renderPreview()}
+function delItem(i){S.items.splice(i,1);save();renderItems();renderPreview()}
+function esc(s){return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
+// ---------- 金额大写 ----------
+function rmb(n){
+  n=Number(n)||0;
+  if(n===0) return '零元整';
+  const neg=n<0;n=Math.abs(n);
+  const digits='零壹贰叁肆伍陆柒捌玖';
+  const units=['','拾','佰','仟'];
+  const bigs=['','万','亿','兆'];
+  const intPart=Math.floor(n);
+  const dec=Math.round((n-intPart)*100);
+  const jiao=Math.floor(dec/10), fen=dec%10;
+  let s='';
+  if(intPart===0){s='零'}
+  else{
+    const str=String(intPart);let groups=[];
+    for(let i=str.length;i>0;i-=4)groups.unshift(str.slice(Math.max(0,i-4),i));
+    groups.forEach((g,gi)=>{
+      let gs='';let zero=false;
+      for(let i=0;i<g.length;i++){
+        const d=+g[i],u=g.length-1-i;
+        if(d===0){zero=true}
+        else{if(zero){gs+='零';zero=false}gs+=digits[d]+units[u]}
+      }
+      gs=gs.replace(/零+$/,'');
+      if(gs)gs+=bigs[groups.length-1-gi];
+      s+=gs;
+    });
+  }
+  s+='元';
+  if(jiao===0&&fen===0)s+='整';
+  else{
+    if(jiao)s+=digits[jiao]+'角';else if(intPart>0&&fen)s+='零';
+    if(fen)s+=digits[fen]+'分';
+  }
+  return (neg?'负':'')+s;
+}
+
+// ---------- 预览渲染 ----------
+function collect(){
+  ['shop','phone','no','date','cust','remark','signer'].forEach(k=>{
+    const el=document.getElementById(k);if(el)S[k]=el.value;
+  });
+}
+function renderPreview(){
+  collect();save();
+  let total=0;
+  const rows=S.items.map((it,i)=>{
+    const q=Number(it.qty)||0,p=Number(it.price)||0,sub=q*p;total+=sub;
+    return `<tr><td>${i+1}</td><td class="name">${esc(it.name)||'&nbsp;'}</td><td>${q||''}</td><td>${esc(it.unit||'')}</td><td>${p?p.toFixed(2):''}</td><td>${sub?sub.toFixed(2):''}</td></tr>`;
+  }).join('');
+  const empty=Math.max(0,4-S.items.length);
+  const pad=Array(empty).fill('<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('');
+  const sigImg=sigData()?`<img src="${sigData()}">`:'';
+  const shopName=esc(S.shop)||'店铺名称';
+  const mark=(S.shop||'店').trim().charAt(0);
+  document.getElementById('preview').innerHTML=`
+    <div class="brand">
+      <div class="brand-mark">${esc(mark)}</div>
+      <div class="brand-text">
+        <div class="brand-name">${shopName}</div>
+        <div class="brand-phone">TEL&nbsp;&nbsp;${esc(S.phone)||'—'}</div>
+      </div>
+    </div>
+    <div class="title-wrap"><span class="doc-title">出&nbsp;货&nbsp;单</span></div>
+    <div class="doc-sub">DELIVERY&nbsp;&nbsp;NOTE</div>
+    <div class="meta">
+      <div class="m-l"><div><span class="k">客户</span>${esc(S.cust)||'____________'}</div></div>
+      <div class="m-r">
+        <div><span class="k">单号</span>${esc(S.no)||'____________'}</div>
+        <div><span class="k">日期</span>${esc(S.date)||'____________'}</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th style="width:34px">序号</th><th>品名 / 规格</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:62px">单价</th><th style="width:72px">金额</th></tr></thead>
+      <tbody>${rows}${pad}</tbody>
+      <tfoot><tr><td colspan="5" style="text-align:right">合计 &nbsp;¥</td><td>${total.toFixed(2)}</td></tr></tfoot>
+    </table>
+    <div class="total-cn"><span class="k">人民币（大写）</span><span class="v">${rmb(total)}</span></div>
+    <div class="remark">备注：${esc(S.remark)}</div>
+    <div class="foot">
+      <div class="blk"><div class="sig-line">${sigImg}</div><div class="lbl">经 手 人${S.signer?' · '+esc(S.signer):''}</div></div>
+    </div>`;
+}
+
+// ---------- 签名板 ----------
+let sigCtx,sigCanvas,drawing=false,hasSig=false;
+function initSig(){
+  sigCanvas=document.getElementById('sigPad');
+  const r=sigCanvas.getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  sigCanvas.width=r.width*dpr;sigCanvas.height=120*dpr;
+  sigCtx=sigCanvas.getContext('2d');
+  sigCtx.scale(dpr,dpr);
+  sigCtx.strokeStyle='#111';sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.lineJoin='round';
+  const pos=e=>{const t=e.touches?e.touches[0]:e;const b=sigCanvas.getBoundingClientRect();return{x:t.clientX-b.left,y:t.clientY-b.top}};
+  const start=e=>{e.preventDefault();drawing=true;const p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y)};
+  const move=e=>{if(!drawing)return;e.preventDefault();const p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();hasSig=true};
+  const end=()=>{if(drawing){drawing=false;renderPreview()}};
+  sigCanvas.addEventListener('mousedown',start);sigCanvas.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',end);
+  sigCanvas.addEventListener('touchstart',start,{passive:false});
+  sigCanvas.addEventListener('touchmove',move,{passive:false});
+  sigCanvas.addEventListener('touchend',end);
+}
+function clearSig(){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);hasSig=false;renderPreview()}
+function sigData(){return hasSig?sigCanvas.toDataURL('image/png'):''}
+
+// ---------- 导出 ----------
+async function snap(){
+  return await html2canvas(document.getElementById('preview'),{scale:3,backgroundColor:'#fff',useCORS:true});
+}
+async function exportPNG(){
+  const c=await snap();
+  const a=document.createElement('a');
+  a.download=`出货单_${S.cust||'客户'}_${S.date||todayStr()}.png`;
+  a.href=c.toDataURL('image/png');a.click();
+}
+async function exportPDF(){
+  const c=await snap();
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF('p','mm','a4');
+  const w=210,h=c.height*w/c.width;
+  pdf.addImage(c.toDataURL('image/png'),'PNG',0,0,w,Math.min(h,297));
+  pdf.save(`出货单_${S.cust||'客户'}_${S.date||todayStr()}.pdf`);
+}
+
+// ---------- 初始化 ----------
+load();
+loadLib();
+if(!S.date)S.date=todayStr();
+if(!S.no)S.no=genNo();
+if(S.items.length===0){S.items=[{name:'',qty:'',unit:'个',price:''},{name:'',qty:'',unit:'个',price:''}]}
+['shop','phone','no','date','cust','remark','signer'].forEach(k=>{
+  const el=document.getElementById(k);if(el){el.value=S[k]||'';el.addEventListener('input',renderPreview)}
+});
+renderItems();initSig();renderPreview();
+</script>
+</body>
+</html>
