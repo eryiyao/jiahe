@@ -38,7 +38,7 @@ html,body{
 .preview-stage{position:relative;padding:18px;background:linear-gradient(180deg,#f6efe2,#efe4d2)}
 .preview-stage::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top left,rgba(255,255,255,.85),transparent 30%),linear-gradient(135deg,rgba(201,169,97,.08),transparent 42%);pointer-events:none}
 .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
-.card-head > div:first-child{padding-left:var(--text-gutter)}
+.card-head > div:first-child{padding-left:var(--text-gutter);min-width:0}
 .card-kicker{font-size:14px;font-weight:800;letter-spacing:.4px;color:#2f281e;line-height:1.2}
 .card-note{font-size:11.5px;color:var(--sub);margin-top:4px;line-height:1.45}
 label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px;font-weight:600;letter-spacing:.2px}
@@ -72,7 +72,7 @@ input:disabled{background:#f2ede4;color:#9a907f;cursor:not-allowed}
 .btn-row .btn{margin-top:0}
 .action-dock{margin-top:6px}
 .action-dock .btn-row + .btn-row{margin-top:10px}
-.lib-btn{background:linear-gradient(180deg,#fff,#f4ecdf);border:1px solid var(--line-strong);color:#322b21;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-soft)}
+.lib-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;flex-shrink:0;background:linear-gradient(180deg,#fff,#f4ecdf);border:1px solid var(--line-strong);color:#322b21;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;line-height:1;cursor:pointer;box-shadow:var(--shadow-soft)}
 .mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:flex-end;justify-content:center}
 .mask.show{display:flex}
 .sheet{background:#fff;width:100%;max-width:780px;max-height:85vh;border-radius:12px 12px 0 0;display:flex;flex-direction:column;overflow:hidden}
@@ -128,7 +128,9 @@ input:disabled{background:#f2ede4;color:#9a907f;cursor:not-allowed}
   .page-desc{font-size:12.5px}
   .section-title-label{font-size:20px;padding:7px 12px}
   .btn-row{grid-template-columns:1fr}
+  .lib-btn{padding:8px 10px;font-size:12px}
   .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 26px}
+  .items .hdr{font-size:12px}
   .preview-stage{padding:12px}
   #preview{padding:28px 18px 22px}
   #preview .doc-title{font-size:22px;letter-spacing:8px;padding:0 12px}
@@ -190,7 +192,7 @@ input:disabled{background:#f2ede4;color:#9a907f;cursor:not-allowed}
       <button class="lib-btn" onclick="openLib()">📋 辅料库</button>
     </div>
     <div class="items" id="items">
-      <div class="hdr"><div>品名 / 规格</div><div>数量</div><div>单位</div><div>单价</div><div></div></div>
+      <div class="hdr"><div>品名</div><div>数量</div><div>单位</div><div>单价</div><div></div></div>
     </div>
     <button class="btn sec" onclick="addItem()">+ 添加一行</button>
   </div>
@@ -453,7 +455,7 @@ function renderItems(){
     const inList=UNITS.includes(it.unit);
     const opts=UNITS.map(u=>`<option value="${u}" ${(!inList&&u==='自定义')||u===it.unit?'selected':''}>${u}</option>`).join('');
     row.innerHTML=`
-      <input placeholder="品名 规格" value="${esc(it.name)}" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i},true)" onblur="setTimeout(hideSuggest,200)">
+      <input placeholder="品名" value="${esc(it.name)}" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i},true)" onblur="setTimeout(hideSuggest,200)">
       <input type="number" inputmode="decimal" placeholder="数量" value="${it.qty}" oninput="upd(${i},'qty',this.value)">
       <select onchange="unitChg(${i},this.value)">${opts}</select>
       <input type="number" inputmode="decimal" step="0.00001" placeholder="单价" value="${it.price}" oninput="upd(${i},'price',this.value)">
@@ -583,7 +585,7 @@ function renderPreview(){
       </div>
     </div>
     <table>
-      <thead><tr><th style="width:46px">序号</th><th>品名 / 规格</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:80px">${S.invoice?'含票单价':'单价'}</th><th style="width:78px">金额</th></tr></thead>
+      <thead><tr><th style="width:46px">序号</th><th>品名</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:80px">${S.invoice?'含票单价':'单价'}</th><th style="width:78px">金额</th></tr></thead>
       <tbody>${rows}${pad}</tbody>
       <tfoot><tr><td colspan="5" style="text-align:right">合计 &nbsp;¥</td><td>${total.toFixed(2)}</td></tr></tfoot>
     </table>
