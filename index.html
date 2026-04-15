@@ -105,6 +105,19 @@ input:focus,textarea:focus{outline:none;border-color:#888}
       <div><label>单号</label><input id="no"></div>
       <div><label>日期</label><input id="date" type="date"></div>
     </div>
+    <div class="row">
+      <div>
+        <label>开发票</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;cursor:pointer;height:38px">
+          <input type="checkbox" id="invoice" style="width:auto;margin:0">
+          <span id="invoiceLabel" style="flex:1;color:#666;font-size:13px">不开票</span>
+        </label>
+      </div>
+      <div>
+        <label>发票系数</label>
+        <input id="invoiceRate" type="number" inputmode="decimal" step="0.0001" value="1.01" disabled>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -236,7 +249,7 @@ function renderLib(){
     <div class="lib-row">
       <input value="${esc(it.name)}" placeholder="品名" oninput="libUpd(${i},'name',this.value)">
       <input value="${esc(it.unit)}" placeholder="单位" oninput="libUpd(${i},'unit',this.value)">
-      <input type="number" inputmode="decimal" value="${it.price}" placeholder="单价" oninput="libUpd(${i},'price',this.value)">
+      <input type="number" inputmode="decimal" step="0.00001" value="${it.price}" placeholder="单价" oninput="libUpd(${i},'price',this.value)">
       <button class="del" onclick="libDel(${i})">×</button>
     </div>`).join('')||'<div style="padding:30px;text-align:center;color:#999;font-size:13px">还没有辅料，点上方"+ 新增"</div>';
 }
@@ -300,6 +313,7 @@ function pickSuggest(itemIdx,libIdx){
 
 const S = {
   shop:'', phone:'', no:'', date:'', cust:'', remark:'', signer:'',
+  invoice:false, invoiceRate:1.01,
   items:[]
 };
 const LS='chuhuodan_v1';
@@ -318,7 +332,7 @@ function addItem(data){
   S.items.push(it);
   renderItems();
 }
-const UNITS=['个','件','套','卷','米','打','包','条','盒','kg','自定义'];
+const UNITS=['个','张','自定义'];
 function renderItems(){
   const box=document.getElementById('items');
   box.querySelectorAll('.item').forEach(n=>n.remove());
@@ -330,7 +344,7 @@ function renderItems(){
       <input placeholder="品名 规格" value="${esc(it.name)}" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i})" onblur="setTimeout(hideSuggest,200)">
       <input type="number" inputmode="decimal" placeholder="数量" value="${it.qty}" oninput="upd(${i},'qty',this.value)">
       <select onchange="unitChg(${i},this.value)">${opts}</select>
-      <input type="number" inputmode="decimal" placeholder="单价" value="${it.price}" oninput="upd(${i},'price',this.value)">
+      <input type="number" inputmode="decimal" step="0.00001" placeholder="单价" value="${it.price}" oninput="upd(${i},'price',this.value)">
       <button class="del" onclick="delItem(${i})">×</button>`;
     box.appendChild(row);
     if(!inList&&it.unit){
@@ -392,13 +406,44 @@ function collect(){
   ['shop','phone','no','date','cust','remark','signer'].forEach(k=>{
     const el=document.getElementById(k);if(el)S[k]=el.value;
   });
+  const inv=document.getElementById('invoice');
+  if(inv)S.invoice=inv.checked;
+  const rate=document.getElementById('invoiceRate');
+  if(rate)S.invoiceRate=Number(rate.value)||1;
+}
+function syncInvoiceUI(){
+  const inv=document.getElementById('invoice');
+  const rate=document.getElementById('invoiceRate');
+  const lbl=document.getElementById('invoiceLabel');
+  if(!inv||!rate||!lbl)return;
+  rate.disabled=!inv.checked;
+  lbl.textContent=inv.checked?('开票 × '+(Number(rate.value)||1)):'不开票';
+  lbl.style.color=inv.checked?'#1a1a1a':'#666';
+}
+function invoiceNote(){
+  const rate=Number(document.getElementById('invoiceRate')?.value)||Number(S.invoiceRate)||1;
+  const pct=+((rate-1)*100).toFixed(4);
+  return '已含普票'+pct+'%税费';
+}
+function syncInvoiceRemark(){
+  const el=document.getElementById('remark');
+  if(!el)return;
+  // 先移除旧的自动备注（任意百分比）
+  let v=(el.value||'').replace(/[；;，,\s]*已含普票[\d.]+%税费/g,'').replace(/^[；;，,\s]+/,'').trim();
+  const inv=document.getElementById('invoice');
+  if(inv&&inv.checked){
+    const note=invoiceNote();
+    v = v ? (v+'；'+note) : note;
+  }
+  el.value=v;S.remark=v;
 }
 function renderPreview(){
   collect();save();
+  const factor=S.invoice?(Number(S.invoiceRate)||1):1;
   let total=0;
   const rows=S.items.map((it,i)=>{
-    const q=Number(it.qty)||0,p=Number(it.price)||0,sub=q*p;total+=sub;
-    return `<tr><td>${i+1}</td><td class="name">${esc(it.name)||'&nbsp;'}</td><td>${q||''}</td><td>${esc(it.unit||'')}</td><td>${p?p.toFixed(2):''}</td><td>${sub?sub.toFixed(2):''}</td></tr>`;
+    const q=Number(it.qty)||0,rawP=Number(it.price)||0,p=rawP*factor,sub=q*p;total+=sub;
+    return `<tr><td>${i+1}</td><td class="name">${esc(it.name)||'&nbsp;'}</td><td>${q||''}</td><td>${esc(it.unit||'')}</td><td>${p?p.toFixed(5):''}</td><td>${sub?sub.toFixed(2):''}</td></tr>`;
   }).join('');
   const empty=Math.max(0,4-S.items.length);
   const pad=Array(empty).fill('<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('');
@@ -479,12 +524,26 @@ async function exportPDF(){
 // ---------- 初始化 ----------
 load();
 loadLib();
+if(!S.shop)S.shop='加禾';
+if(!S.phone)S.phone='18902230236';
 if(!S.date)S.date=todayStr();
-if(!S.no)S.no=genNo();
 if(S.items.length===0){S.items=[{name:'',qty:'',unit:'个',price:''},{name:'',qty:'',unit:'个',price:''}]}
 ['shop','phone','no','date','cust','remark','signer'].forEach(k=>{
   const el=document.getElementById(k);if(el){el.value=S[k]||'';el.addEventListener('input',renderPreview)}
 });
+// 发票开关 & 系数
+const invEl=document.getElementById('invoice');
+const rateEl=document.getElementById('invoiceRate');
+if(invEl){
+  invEl.checked=!!S.invoice;
+  invEl.addEventListener('change',()=>{syncInvoiceUI();syncInvoiceRemark();renderPreview()});
+}
+if(rateEl){
+  rateEl.value=S.invoiceRate||1.01;
+  rateEl.addEventListener('input',()=>{syncInvoiceUI();syncInvoiceRemark();renderPreview()});
+}
+syncInvoiceUI();
+syncInvoiceRemark();
 renderItems();initSig();renderPreview();
 </script>
 </body>
