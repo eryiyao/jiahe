@@ -623,8 +623,8 @@ function clearCurrentOrder(){
 function validateBeforeExport(){
   collect();
   const issues=[];
-  if(!(S.no||'').trim())issues.push('请填写单号');
   if(!(S.cust||'').trim())issues.push('请填写客户名称');
+  if(!(S.no||'').trim())issues.push('请填写单号');
   const completeRows=[];
   const incompleteRows=[];
   S.items.forEach((it,i)=>{
@@ -640,8 +640,8 @@ function validateBeforeExport(){
   if(!completeRows.length)issues.push('请至少填写一条完整商品明细');
   if(incompleteRows.length)issues.push('第 '+incompleteRows.join('、')+' 行信息还没填完整');
   if(issues.length){
-    if(!(S.no||'').trim())document.getElementById('no')?.focus();
-    else if(!(S.cust||'').trim())document.getElementById('cust')?.focus();
+    if(!(S.cust||'').trim())document.getElementById('cust')?.focus();
+    else if(!(S.no||'').trim())document.getElementById('no')?.focus();
     alert(issues.join('\n'));
     return false;
   }
