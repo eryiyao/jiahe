@@ -17,6 +17,8 @@ h1{font-size:16px;font-weight:600;margin-bottom:10px;color:#333;letter-spacing:.
 .card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:14px}
 label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
 input,textarea,select{width:100%;border:1px solid var(--line);border-radius:4px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input:focus,textarea:focus{outline:none;border-color:#888}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .row.full{grid-template-columns:1fr}
@@ -442,7 +444,9 @@ function renderPreview(){
   const factor=S.invoice?(Number(S.invoiceRate)||1):1;
   let total=0;
   const rows=S.items.map((it,i)=>{
-    const q=Number(it.qty)||0,rawP=Number(it.price)||0,p=rawP*factor,sub=q*p;total+=sub;
+    const q=Number(it.qty)||0,rawP=Number(it.price)||0,p=rawP*factor;
+    // 每行金额先四舍五入到2位，再累加入合计，确保显示值相加等于合计
+    const sub=Math.round(q*p*100)/100;total+=sub;
     return `<tr><td>${i+1}</td><td class="name">${esc(it.name)||'&nbsp;'}</td><td>${q||''}</td><td>${esc(it.unit||'')}</td><td>${p?p.toFixed(5):''}</td><td>${sub?sub.toFixed(2):''}</td></tr>`;
   }).join('');
   const empty=Math.max(0,4-S.items.length);
@@ -468,11 +472,12 @@ function renderPreview(){
       </div>
     </div>
     <table>
-      <thead><tr><th style="width:34px">序号</th><th>品名 / 规格</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:62px">单价</th><th style="width:72px">金额</th></tr></thead>
+      <thead><tr><th style="width:34px">序号</th><th>品名 / 规格</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:62px">${S.invoice?'含票单价':'单价'}</th><th style="width:72px">金额</th></tr></thead>
       <tbody>${rows}${pad}</tbody>
       <tfoot><tr><td colspan="5" style="text-align:right">合计 &nbsp;¥</td><td>${total.toFixed(2)}</td></tr></tfoot>
     </table>
     <div class="total-cn"><span class="k">人民币（大写）</span><span class="v">${rmb(total)}</span></div>
+    ${S.invoice?`<div class="total-cn" style="border-top:none"><span class="k">发票系数</span><span class="v">× ${Number(S.invoiceRate)||1}</span></div>`:''}
     <div class="remark">备注：${esc(S.remark)}</div>
     <div class="foot">
       <div class="blk"><div class="sig-line">${sigImg}</div><div class="lbl">经 手 人${S.signer?' · '+esc(S.signer):''}</div></div>
@@ -528,6 +533,8 @@ if(!S.shop)S.shop='加禾';
 if(!S.phone)S.phone='18902230236';
 if(!S.date)S.date=todayStr();
 if(!S.no)S.no='CK'+todayStr().replace(/-/g,'')+'-';
+// 每次打开页面强制复位"不开发票"，避免给上一客户的设置带到下一单
+S.invoice=false;
 if(S.items.length===0){S.items=[{name:'',qty:'',unit:'个',price:''},{name:'',qty:'',unit:'个',price:''}]}
 ['shop','phone','no','date','cust','remark','signer'].forEach(k=>{
   const el=document.getElementById(k);if(el){el.value=S[k]||'';el.addEventListener('input',renderPreview)}
