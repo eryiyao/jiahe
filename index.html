@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>出货单</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ma-shan-zheng@5.2.9/index.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --ink:#1f1b16; --sub:#6f675d; --line:#ddd5c8; --line-strong:#cbbda7; --bg:#f3eee5; --paper:#fffdf8;
   --surface:#f8f4ec; --accent:#b8892d; --accent-deep:#8c6218; --accent-soft:#efe1be; --shadow:0 18px 36px rgba(49,37,15,.08); --shadow-soft:0 10px 22px rgba(49,37,15,.05); --focus:0 0 0 4px rgba(184,137,45,.14);
+  --text-gutter:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{
@@ -36,6 +38,7 @@ html,body{
 .preview-stage{position:relative;padding:18px;background:linear-gradient(180deg,#f6efe2,#efe4d2)}
 .preview-stage::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top left,rgba(255,255,255,.85),transparent 30%),linear-gradient(135deg,rgba(201,169,97,.08),transparent 42%);pointer-events:none}
 .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.card-head > div:first-child{padding-left:var(--text-gutter)}
 .card-kicker{font-size:14px;font-weight:800;letter-spacing:.4px;color:#2f281e;line-height:1.2}
 .card-note{font-size:11.5px;color:var(--sub);margin-top:4px;line-height:1.45}
 label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px;font-weight:600;letter-spacing:.2px}
@@ -50,11 +53,14 @@ input:disabled{background:#f2ede4;color:#9a907f;cursor:not-allowed}
 .row.full{grid-template-columns:1fr}
 .row > div,.field{position:relative}
 .row > div > label:first-child,.field > label{transition:color .18s ease,letter-spacing .18s ease}
+.row > div > label:first-child,.field > label{padding-left:var(--text-gutter)}
 .row > div:focus-within > label:first-child,.field:focus-within > label{color:var(--accent-deep);letter-spacing:.2px}
+.check-option{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;min-height:48px}
+.check-option-text{flex:1;font-size:13px;font-weight:700;letter-spacing:.2px;color:#5f564a}
 .items .item{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:6px;margin-bottom:9px;align-items:center;padding:8px 10px;border:1px solid transparent;border-radius:12px;background:var(--surface);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
 .items .item:focus-within{border-color:rgba(184,137,45,.34);box-shadow:var(--shadow-soft);background:#fff}
 .items .item input,.items .item select{padding:8px 6px;font-size:14px;background:transparent;border-color:transparent;box-shadow:none}
-.items .hdr{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:6px;font-size:10.5px;color:#807668;margin-bottom:6px;padding:0 10px;letter-spacing:.9px;text-transform:uppercase}
+.items .hdr{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:6px;font-size:13px;font-weight:700;color:#62594d;margin-bottom:7px;padding:0 var(--text-gutter);letter-spacing:.2px}
 .del{background:#fff7f3;border:1px solid #e5d7c8;border-radius:10px;height:36px;font-size:18px;color:#a36d59;cursor:pointer}
 .btn{background:linear-gradient(180deg,#24211c,#12100d);color:#fff;border:1px solid #161310;border-radius:12px;padding:12px 16px;font-size:14.5px;font-weight:600;cursor:pointer;width:100%;margin-top:6px;box-shadow:0 12px 26px rgba(18,16,13,.18);transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
 .btn:hover{transform:translateY(-1px);box-shadow:0 16px 30px rgba(18,16,13,.2)}
@@ -114,7 +120,7 @@ input:disabled{background:#f2ede4;color:#9a907f;cursor:not-allowed}
 #preview .remark{margin-top:14px;font-size:11.5px;color:#555;min-height:30px;padding:8px 10px;border-left:2px solid #c9a961;background:#fcfbf7}
 #preview .foot{display:flex;justify-content:flex-end;align-items:baseline;margin-top:26px}
 #preview .foot .k{font-size:13px;color:#333;letter-spacing:1px}
-#preview .foot .name{font-family:"Hanzipen SC","HanziPen SC","Hannotate SC","Caveat","STKaiti","Kaiti SC","楷体",cursive;font-size:22px;font-weight:500;color:#1a1a1a;letter-spacing:3px;margin-left:2px;min-width:60px;display:inline-block}
+#preview .foot .name{font-family:"Ma Shan Zheng","Hanzipen SC","HanziPen SC","Hannotate SC","STKaiti","Kaiti SC","楷体",cursive;font-size:22px;font-weight:400;font-synthesis:none;color:#1a1a1a;letter-spacing:3px;margin-left:2px;min-width:60px;display:inline-block}
 
 @media(max-width:420px){
   .page-hero{padding:16px 16px 14px}
@@ -163,9 +169,9 @@ input:disabled{background:#f2ede4;color:#9a907f;cursor:not-allowed}
     <div class="row full" id="invoiceRow">
       <div>
         <label>是否开票</label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;cursor:pointer;height:38px">
+        <label class="check-option">
           <input type="checkbox" id="invoice" style="width:auto;margin:0">
-          <span id="invoiceLabel" style="flex:1;color:#666;font-size:13px">开发票</span>
+          <span id="invoiceLabel" class="check-option-text">开发票</span>
         </label>
       </div>
       <div id="invoiceRateWrap" style="display:none">
@@ -641,6 +647,9 @@ function validateBeforeExport(){
 
 // ---------- 导出 ----------
 async function snap(){
+  if(document.fonts&&document.fonts.ready){
+    try{await document.fonts.ready}catch(e){}
+  }
   return await html2canvas(document.getElementById('preview'),{scale:3,backgroundColor:'#fff',useCORS:true});
 }
 async function exportPNG(){
