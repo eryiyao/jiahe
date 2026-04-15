@@ -48,11 +48,6 @@ input:focus,textarea:focus{outline:none;border-color:#888}
 .suggest .s-meta{color:#888;font-size:11px;font-family:-apple-system,sans-serif;flex-shrink:0}
 .suggest .s-empty{padding:12px;color:#999;font-size:12px;text-align:center}
 
-/* 签名 */
-.sig-wrap{border:1px dashed var(--line);border-radius:4px;background:#fff;position:relative}
-#sigPad{display:block;width:100%;height:120px;touch-action:none}
-.sig-clear{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--sub);font-size:12px;cursor:pointer}
-
 /* 预览 ===== 简洁商务 · 精修版 ===== */
 #preview{background:#fff;color:#111;padding:40px 34px 34px;font-family:"SimSun","Songti SC","Noto Serif CJK SC",serif;width:100%;position:relative}
 #preview::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#111 0%,#111 35%,#c9a961 35%,#c9a961 42%,#111 42%,#111 100%)}
@@ -74,16 +69,14 @@ input:focus,textarea:focus{outline:none;border-color:#888}
 #preview thead th{background:#111;color:#fff;font-weight:500;letter-spacing:1px;border-color:#111;padding:10px 5px;font-size:12px}
 #preview td.name{text-align:left;padding-left:12px}
 #preview tbody tr:nth-child(even) td{background:#fafafa}
-#preview tfoot td{font-weight:700;background:#f0f0f0;padding:11px 5px;border-color:#111;font-size:13px}
+#preview tfoot td{font-weight:700;background:#f0f0f0;padding:11px 5px;border:1px solid #bbb;border-top:2px solid #111;font-size:13px}
 #preview .total-cn{font-size:12.5px;padding:11px 12px;background:#fafafa;border:1px solid #bbb;border-top:none;display:flex;justify-content:space-between;align-items:center;gap:8px}
 #preview .total-cn .k{color:#888;font-size:11px;letter-spacing:1px;flex-shrink:0}
 #preview .total-cn .v{font-weight:600;letter-spacing:1px;text-align:right}
 #preview .remark{margin-top:14px;font-size:11.5px;color:#555;min-height:30px;padding:8px 10px;border-left:2px solid #c9a961;background:#fcfbf7}
-#preview .foot{display:flex;justify-content:flex-end;margin-top:30px;font-size:11px}
-#preview .foot .blk{width:55%;min-width:180px}
-#preview .foot .sig-line{border-bottom:1px solid #111;height:58px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px}
-#preview .foot .sig-line img{max-height:54px;max-width:100%}
-#preview .foot .lbl{text-align:center;font-size:10.5px;color:#888;margin-top:5px;letter-spacing:2px;font-family:-apple-system,sans-serif}
+#preview .foot{display:flex;justify-content:flex-end;align-items:baseline;margin-top:26px}
+#preview .foot .k{font-size:13px;color:#333;letter-spacing:1px}
+#preview .foot .name{font-family:"Hanzipen SC","HanziPen SC","Hannotate SC","Caveat","STKaiti","Kaiti SC","楷体",cursive;font-size:22px;font-weight:500;color:#1a1a1a;letter-spacing:3px;margin-left:2px;min-width:60px;display:inline-block}
 
 @media(max-width:420px){
   .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 26px}
@@ -169,12 +162,8 @@ input:focus,textarea:focus{outline:none;border-color:#888}
   </div>
 
   <div class="card">
-    <label>经手人 / 签名</label>
-    <input id="signer" placeholder="经手人姓名" style="margin-bottom:8px">
-    <div class="sig-wrap">
-      <canvas id="sigPad"></canvas>
-      <button class="sig-clear" onclick="clearSig()">清除</button>
-    </div>
+    <label>经手人</label>
+    <input id="signer" placeholder="经手人姓名">
   </div>
 
   <h1>预览</h1>
@@ -451,7 +440,6 @@ function renderPreview(){
   }).join('');
   const empty=Math.max(0,4-S.items.length);
   const pad=Array(empty).fill('<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('');
-  const sigImg=sigData()?`<img src="${sigData()}">`:'';
   const shopName=esc(S.shop)||'店铺名称';
   const mark=(S.shop||'店').trim().charAt(0);
   document.getElementById('preview').innerHTML=`
@@ -472,7 +460,7 @@ function renderPreview(){
       </div>
     </div>
     <table>
-      <thead><tr><th style="width:34px">序号</th><th>品名 / 规格</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:62px">${S.invoice?'含票单价':'单价'}</th><th style="width:72px">金额</th></tr></thead>
+      <thead><tr><th style="width:46px">序号</th><th>品名 / 规格</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:80px">${S.invoice?'含票单价':'单价'}</th><th style="width:78px">金额</th></tr></thead>
       <tbody>${rows}${pad}</tbody>
       <tfoot><tr><td colspan="5" style="text-align:right">合计 &nbsp;¥</td><td>${total.toFixed(2)}</td></tr></tfoot>
     </table>
@@ -480,32 +468,9 @@ function renderPreview(){
     ${S.invoice?`<div class="total-cn" style="border-top:none"><span class="k">发票系数</span><span class="v">× ${Number(S.invoiceRate)||1}</span></div>`:''}
     <div class="remark">备注：${esc(S.remark)}</div>
     <div class="foot">
-      <div class="blk"><div class="sig-line">${sigImg}</div><div class="lbl">经 手 人${S.signer?' · '+esc(S.signer):''}</div></div>
+      <span class="k">经手人：</span><span class="name">${esc(S.signer)||'&nbsp;'}</span>
     </div>`;
 }
-
-// ---------- 签名板 ----------
-let sigCtx,sigCanvas,drawing=false,hasSig=false;
-function initSig(){
-  sigCanvas=document.getElementById('sigPad');
-  const r=sigCanvas.getBoundingClientRect();
-  const dpr=window.devicePixelRatio||1;
-  sigCanvas.width=r.width*dpr;sigCanvas.height=120*dpr;
-  sigCtx=sigCanvas.getContext('2d');
-  sigCtx.scale(dpr,dpr);
-  sigCtx.strokeStyle='#111';sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.lineJoin='round';
-  const pos=e=>{const t=e.touches?e.touches[0]:e;const b=sigCanvas.getBoundingClientRect();return{x:t.clientX-b.left,y:t.clientY-b.top}};
-  const start=e=>{e.preventDefault();drawing=true;const p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y)};
-  const move=e=>{if(!drawing)return;e.preventDefault();const p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();hasSig=true};
-  const end=()=>{if(drawing){drawing=false;renderPreview()}};
-  sigCanvas.addEventListener('mousedown',start);sigCanvas.addEventListener('mousemove',move);
-  window.addEventListener('mouseup',end);
-  sigCanvas.addEventListener('touchstart',start,{passive:false});
-  sigCanvas.addEventListener('touchmove',move,{passive:false});
-  sigCanvas.addEventListener('touchend',end);
-}
-function clearSig(){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);hasSig=false;renderPreview()}
-function sigData(){return hasSig?sigCanvas.toDataURL('image/png'):''}
 
 // ---------- 导出 ----------
 async function snap(){
@@ -552,7 +517,7 @@ if(rateEl){
 }
 syncInvoiceUI();
 syncInvoiceRemark();
-renderItems();initSig();renderPreview();
+renderItems();renderPreview();
 </script>
 </body>
 </html>
