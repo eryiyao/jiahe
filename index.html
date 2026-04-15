@@ -527,6 +527,7 @@ loadLib();
 if(!S.shop)S.shop='加禾';
 if(!S.phone)S.phone='18902230236';
 if(!S.date)S.date=todayStr();
+if(!S.no)S.no='CK'+todayStr().replace(/-/g,'')+'-';
 if(S.items.length===0){S.items=[{name:'',qty:'',unit:'个',price:''},{name:'',qty:'',unit:'个',price:''}]}
 ['shop','phone','no','date','cust','remark','signer'].forEach(k=>{
   const el=document.getElementById(k);if(el){el.value=S[k]||'';el.addEventListener('input',renderPreview)}
