@@ -35,6 +35,9 @@ html,body{
 .preview-card{padding:0;overflow:hidden;border-color:#d6c8b0}
 .preview-stage{position:relative;padding:18px;background:var(--surface)}
 .preview-stage::before{content:none}
+.preview-image{display:none;width:100%;max-width:760px;margin:0 auto;border:1px solid #e5dccd;border-radius:8px;background:#fffefb;box-shadow:0 18px 38px rgba(33,24,12,.1)}
+.preview-tip{margin-top:10px;font-size:11.5px;line-height:1.45;color:var(--sub);text-align:center}
+#previewSourceWrap{position:fixed;left:-10000px;top:0;width:760px;pointer-events:none}
 .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
 .card-head > div:first-child{min-width:0}
 .card-kicker{font-size:14px;font-weight:800;letter-spacing:.4px;color:var(--ink);line-height:1.2;padding-left:12px}
@@ -91,7 +94,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
 .suggest .s-empty{padding:12px;color:#999;font-size:12px;text-align:center}
 
 /* 预览 ===== 简洁商务 · 精修版 ===== */
-#preview{background:#fffefb;color:#111;padding:40px 34px 34px;font-family:"SimSun","Songti SC","Noto Serif CJK SC",serif;width:100%;max-width:760px;margin:0 auto;position:relative;border:1px solid #e5dccd;border-radius:8px;box-shadow:0 18px 38px rgba(33,24,12,.1)}
+#preview{background:#fffefb;color:#111;padding:40px 34px 34px;font-family:"SimSun","Songti SC","Noto Serif CJK SC",serif;width:760px;max-width:none;margin:0;position:relative;border:1px solid #e5dccd;border-radius:8px;box-shadow:0 18px 38px rgba(33,24,12,.1)}
 #preview::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 40%,var(--accent-deep) 100%)}
 #preview .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
 #preview .brand-mark{width:38px;height:38px;background:var(--accent-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:serif;flex-shrink:0}
@@ -132,10 +135,6 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 26px}
   .items .hdr{font-size:12px}
   .preview-stage{padding:12px}
-  #preview{padding:28px 18px 22px}
-  #preview .title-wrap{gap:12px}
-  #preview .doc-title{font-size:22px;letter-spacing:8px;padding:0}
-  #preview .brand-name{font-size:14px;letter-spacing:2px}
 }
 @media(max-width:720px){
   .action-dock{position:sticky;bottom:12px;z-index:40;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);box-shadow:0 4px 16px rgba(0,0,0,.1)}
@@ -273,8 +272,13 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   <div class="section-title"><span class="section-title-label">预览</span></div>
   <div class="card preview-card">
     <div class="preview-stage">
-      <div id="preview"></div>
+      <img id="previewImage" class="preview-image" alt="出货单预览图">
+      <div class="preview-tip">手机上看到的预览图就是导出的正式样式，长按图片即可另存。</div>
     </div>
+  </div>
+
+  <div id="previewSourceWrap" aria-hidden="true">
+    <div id="preview"></div>
   </div>
 
   <div class="action-dock">
@@ -445,6 +449,18 @@ const S = {
   items:[]
 };
 const LS='chuhuodan_v1';
+const PREVIEW_SCALE=3;
+const PREVIEW_RENDER_DELAY=320;
+let previewTimer=0;
+let previewIdleHandle=0;
+let previewRenderTask=null;
+let previewRenderQueued=false;
+let previewCanvas=null;
+let previewBlob=null;
+let previewPngHref='';
+let previewMarkupVersion=0;
+let previewRenderedVersion=0;
+let previewMarkupHTML='';
 function blankItem(){return {name:'',qty:'',unit:'张',price:''}}
 
 function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
@@ -577,6 +593,84 @@ function invoiceNote(){
   const pct=+((rate-1)*100).toFixed(4);
   return '已含普票'+pct+'%税费';
 }
+function cancelPreviewImageRender(){
+  clearTimeout(previewTimer);
+  previewTimer=0;
+  if(previewIdleHandle){
+    if(window.cancelIdleCallback)window.cancelIdleCallback(previewIdleHandle);
+    else clearTimeout(previewIdleHandle);
+    previewIdleHandle=0;
+  }
+}
+function replacePreviewHref(nextHref){
+  const prevHref=previewPngHref;
+  previewPngHref=nextHref||'';
+  if(prevHref&&prevHref.startsWith('blob:'))URL.revokeObjectURL(prevHref);
+}
+function queuePreviewImageRender(delay=PREVIEW_RENDER_DELAY){
+  cancelPreviewImageRender();
+  previewTimer=window.setTimeout(()=>{
+    previewTimer=0;
+    const run=()=>{previewIdleHandle=0;renderPreviewImageNow().catch(()=>{})};
+    if(window.requestIdleCallback)previewIdleHandle=window.requestIdleCallback(run,{timeout:700});
+    else previewIdleHandle=window.setTimeout(run,16);
+  },delay);
+}
+function canvasToBlob(canvas){
+  return new Promise(resolve=>{
+    if(canvas.toBlob)canvas.toBlob(resolve,'image/png');
+    else resolve(null);
+  });
+}
+async function renderPreviewImageNow(targetVersion=previewMarkupVersion){
+  cancelPreviewImageRender();
+  if(previewRenderedVersion>=targetVersion&&previewPngHref){
+    return {canvas:previewCanvas,blob:previewBlob,href:previewPngHref};
+  }
+  if(previewRenderTask){
+    previewRenderQueued=true;
+    await previewRenderTask;
+    return renderPreviewImageNow(targetVersion);
+  }
+  const version=previewMarkupVersion;
+  previewRenderTask=(async()=>{
+    if(document.fonts&&document.fonts.ready){
+      try{await document.fonts.ready}catch(e){}
+    }
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const el=document.getElementById('preview');
+    const canvas=await html2canvas(el,{scale:PREVIEW_SCALE,backgroundColor:'#fff',useCORS:true});
+    const blob=await canvasToBlob(canvas);
+    const href=blob?URL.createObjectURL(blob):canvas.toDataURL('image/png');
+    previewCanvas=canvas;
+    previewBlob=blob;
+    replacePreviewHref(href);
+    previewRenderedVersion=version;
+    const img=document.getElementById('previewImage');
+    if(img){
+      img.src=previewPngHref;
+      img.style.display='block';
+    }
+    return {canvas,blob,href:previewPngHref};
+  })();
+  try{
+    await previewRenderTask;
+  }finally{
+    previewRenderTask=null;
+    if(previewRenderQueued){
+      previewRenderQueued=false;
+      queuePreviewImageRender(0);
+    }
+  }
+  if(previewRenderedVersion<targetVersion){
+    return renderPreviewImageNow(targetVersion);
+  }
+  return {canvas:previewCanvas,blob:previewBlob,href:previewPngHref};
+}
+async function ensurePreviewImage(){
+  const result=await renderPreviewImageNow(previewMarkupVersion);
+  return result||{canvas:previewCanvas,blob:previewBlob,href:previewPngHref};
+}
 function renderPreview(){
   collect();save();
   const factor=S.invoice?(Number(S.invoiceRate)||1):1;
@@ -594,7 +688,7 @@ function renderPreview(){
   const tags=[S.tagShipped?'已发货':null,S.tagUnpaid?'没收款':null].filter(Boolean);
   const remarkParts=[S.remark,tags.length?'【'+tags.join('｜')+'】':''].filter(Boolean).join('  ');
   const remarkText=esc(remarkParts)||'&nbsp;';
-  document.getElementById('preview').innerHTML=`
+  const nextHTML=`
     <div class="brand">
       <div class="brand-mark">${esc(mark)}</div>
       <div class="brand-text">
@@ -623,6 +717,14 @@ function renderPreview(){
     <div class="foot">
       <span class="k">经手人：</span><span class="name">${esc(S.signer)||'&nbsp;'}</span>
     </div>`;
+  if(nextHTML===previewMarkupHTML){
+    if(!previewPngHref&&!previewRenderTask)queuePreviewImageRender(0);
+    return;
+  }
+  previewMarkupHTML=nextHTML;
+  previewMarkupVersion+=1;
+  document.getElementById('preview').innerHTML=nextHTML;
+  queuePreviewImageRender(previewPngHref?PREVIEW_RENDER_DELAY:0);
 }
 
 function resetOrderState({preserveDate}){
@@ -678,43 +780,22 @@ function validateBeforeExport(){
 }
 
 // ---------- 导出 ----------
-async function snap(){
-  if(document.fonts&&document.fonts.ready){
-    try{await document.fonts.ready}catch(e){}
-  }
-  const el=document.getElementById('preview');
-  // Force desktop layout for export
-  const origStyle=el.getAttribute('style')||'';
-  el.style.cssText=origStyle+';width:760px;max-width:760px;padding:40px 34px 34px;font-size:12.5px';
-  const title=el.querySelector('.doc-title');
-  const brand=el.querySelector('.brand-name');
-  const titleOrig=title?title.getAttribute('style')||'':'';
-  const brandOrig=brand?brand.getAttribute('style')||'':'';
-  if(title)title.style.cssText=titleOrig+';font-size:26px;letter-spacing:12px;padding:0 20px';
-  if(brand)brand.style.cssText=brandOrig+';font-size:16px;letter-spacing:3px';
-  const canvas=await html2canvas(el,{scale:3,backgroundColor:'#fff',useCORS:true});
-  // Restore
-  el.setAttribute('style',origStyle);
-  if(title)title.setAttribute('style',titleOrig);
-  if(brand)brand.setAttribute('style',brandOrig);
-  return canvas;
-}
 async function exportPNG(){
   if(!validateBeforeExport())return;
   renderPreview();
-  const c=await snap();
+  const {href}=await ensurePreviewImage();
   const a=document.createElement('a');
   a.download=`出货单_${S.cust||'客户'}_${S.date||todayStr()}.png`;
-  a.href=c.toDataURL('image/png');a.click();
+  a.href=href;a.click();
 }
 async function exportPDF(){
   if(!validateBeforeExport())return;
   renderPreview();
-  const c=await snap();
+  const {canvas:c}=await ensurePreviewImage();
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF('p','mm','a4');
   const w=210,h=c.height*w/c.width;
-  pdf.addImage(c.toDataURL('image/png'),'PNG',0,0,w,Math.min(h,297));
+  pdf.addImage(c,'PNG',0,0,w,Math.min(h,297));
   pdf.save(`出货单_${S.cust||'客户'}_${S.date||todayStr()}.pdf`);
 }
 
