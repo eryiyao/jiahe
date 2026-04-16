@@ -97,9 +97,10 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
 #preview .brand-mark{width:38px;height:38px;background:var(--accent-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:serif;flex-shrink:0}
 #preview .brand-name{font-size:16px;font-weight:600;letter-spacing:3px;line-height:1.2}
 #preview .brand-phone{font-size:11px;color:#777;letter-spacing:1px;margin-top:2px;font-family:-apple-system,sans-serif}
-#preview .title-wrap{text-align:center;margin:22px 0 18px;position:relative}
-#preview .doc-title{display:inline-block;font-size:26px;font-weight:700;letter-spacing:12px;padding:0 20px;background:#fff;position:relative;z-index:1}
-#preview .title-wrap::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--accent-deep)}
+#preview .title-wrap{margin:22px 0 18px;display:flex;align-items:center;justify-content:center;gap:18px}
+#preview .title-wrap::before,#preview .title-wrap::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(168,70,30,.08),var(--accent-deep))}
+#preview .title-wrap::after{background:linear-gradient(90deg,var(--accent-deep),rgba(168,70,30,.08))}
+#preview .doc-title{display:inline-block;font-size:26px;font-weight:700;letter-spacing:12px;padding:0;background:transparent;flex-shrink:0}
 #preview .doc-sub{text-align:center;font-size:10px;color:#999;letter-spacing:4px;margin-top:-2px;font-family:-apple-system,sans-serif}
 #preview .meta{display:flex;justify-content:space-between;margin:20px 0 14px;font-size:12.5px;gap:16px}
 #preview .meta .m-l,#preview .meta .m-r{flex:1}
@@ -132,7 +133,8 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   .items .hdr{font-size:12px}
   .preview-stage{padding:12px}
   #preview{padding:28px 18px 22px}
-  #preview .doc-title{font-size:22px;letter-spacing:8px;padding:0 12px}
+  #preview .title-wrap{gap:12px}
+  #preview .doc-title{font-size:22px;letter-spacing:8px;padding:0}
   #preview .brand-name{font-size:14px;letter-spacing:2px}
 }
 @media(max-width:720px){
@@ -164,7 +166,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
       <div><label>客户名称</label><input id="cust" placeholder="客户名"></div>
     </div>
     <div class="row">
-      <div><label>单号</label><input id="no"></div>
+      <div><label>出货单号</label><input id="no"></div>
       <div><label>日期</label><input id="date" type="date"></div>
     </div>
     <div class="row full" id="invoiceRow">
@@ -605,7 +607,7 @@ function renderPreview(){
     <div class="meta">
       <div class="m-l"><div><span class="k">客户</span>${esc(S.cust)||'____________'}</div></div>
       <div class="m-r">
-        <div><span class="k">单号</span>${esc(S.no)||'____________'}</div>
+        <div><span class="k">出货单号</span>${esc(S.no)||'____________'}</div>
         <div><span class="k">日期</span>${esc(S.date)||'____________'}</div>
       </div>
     </div>
@@ -651,7 +653,7 @@ function validateBeforeExport(){
   collect();
   const issues=[];
   if(!(S.cust||'').trim())issues.push('请填写客户名称');
-  if(!(S.no||'').trim())issues.push('请填写单号');
+  if(!(S.no||'').trim())issues.push('请填写出货单号');
   const completeRows=[];
   const incompleteRows=[];
   S.items.forEach((it,i)=>{
