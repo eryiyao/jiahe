@@ -31,6 +31,11 @@ html,body{
 .section-title{margin:8px 2px 14px;display:flex;align-items:center;gap:14px}
 .section-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(84,75,63,.24),rgba(84,75,63,0))}
 .section-title-label{display:inline-flex;align-items:center;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow-soft);font-size:24px;font-weight:900;letter-spacing:1px;line-height:1;color:var(--ink)}
+.preview-section-title{justify-content:center;gap:18px;margin:10px 2px 16px}
+.preview-section-title::before,.preview-section-title::after{content:"";flex:1;max-width:120px;height:1px}
+.preview-section-title::before{background:linear-gradient(90deg,rgba(201,100,66,0),rgba(201,100,66,.72))}
+.preview-section-title::after{background:linear-gradient(90deg,rgba(201,100,66,.72),rgba(201,100,66,0))}
+.preview-section-title .section-title-label{padding:0;border:none;background:transparent;box-shadow:none;font-size:28px;letter-spacing:6px;color:var(--accent-deep)}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-soft)}
 .preview-card{padding:0;overflow:hidden;border-color:#d6c8b0}
 .preview-stage{position:relative;padding:18px;background:var(--surface)}
@@ -131,6 +136,9 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   .page-title{font-size:28px}
   .page-desc{font-size:12.5px}
   .section-title-label{font-size:20px;padding:7px 12px}
+  .preview-section-title{gap:10px}
+  .preview-section-title::before,.preview-section-title::after{max-width:72px}
+  .preview-section-title .section-title-label{font-size:24px;letter-spacing:4px;padding:0}
   .btn-row{grid-template-columns:1fr}
   .lib-btn{padding:8px 10px;font-size:12px}
   .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 26px}
@@ -274,7 +282,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
     </div>
   </div>
 
-  <div class="section-title"><span class="section-title-label">预览</span></div>
+  <div class="section-title preview-section-title"><span class="section-title-label">预览</span></div>
   <div class="card preview-card">
     <div class="preview-stage">
       <div id="previewMobile" class="preview-doc mobile"></div>
@@ -629,7 +637,10 @@ function renderPreview(){
     total=roundDecimal(total+sub,5);
     return `<tr><td>${i+1}</td><td class="name">${esc(it.name)||'&nbsp;'}</td><td>${q||''}</td><td>${esc(it.unit||'')}</td><td>${p?p.toFixed(5):''}</td><td>${sub?formatLineAmount(sub):''}</td></tr>`;
   }).join('');
-  const totalDisplay=roundDecimal(total,2);
+  const totalRounded=roundDecimal(total,2);
+  const totalDisplayText=formatLineAmount(total);
+  const totalExact=totalDisplayText!==totalRounded.toFixed(2);
+  const totalCnLabel=totalExact?'人民币（大写，按分）':'人民币（大写）';
   const empty=Math.max(0,4-S.items.length);
   const pad=Array(empty).fill('<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('');
   const shopName=esc(S.shop)||'店铺名称';
@@ -657,9 +668,9 @@ function renderPreview(){
     <table>
       <thead><tr><th style="width:46px">序号</th><th>品名</th><th style="width:50px">数量</th><th style="width:44px">单位</th><th style="width:80px">${S.invoice?'含票单价':'单价'}</th><th style="width:78px">金额</th></tr></thead>
       <tbody>${rows}${pad}</tbody>
-      <tfoot><tr><td colspan="5" style="text-align:right">合计 &nbsp;¥</td><td>${totalDisplay.toFixed(2)}</td></tr></tfoot>
+      <tfoot><tr><td colspan="5" style="text-align:right">合计 &nbsp;¥</td><td>${totalDisplayText}</td></tr></tfoot>
     </table>
-    <div class="total-cn"><span class="k">人民币（大写）</span><span class="v">${rmb(totalDisplay)}</span></div>
+    <div class="total-cn"><span class="k">${totalCnLabel}</span><span class="v">${rmb(totalRounded)}</span></div>
     ${S.invoice?`<div class="total-cn" style="border-top:none"><span class="k">发票系数</span><span class="v">× ${Number(S.invoiceRate)||1}</span></div>`:''}
     ${S.invoice?`<div class="invoice-note">发票说明：${invoiceNote()}</div>`:''}
     <div class="remark">备注：${remarkText}</div>
