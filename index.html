@@ -348,7 +348,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   <div class="action-dock">
     <div class="btn-row">
       <button class="btn ghost" onclick="newOrder()">再记一单</button>
-      <button class="btn ghost" onclick="clearCurrentOrder()">清空本单</button>
+      <button class="btn ghost" onclick="clearCurrentOrder()">清空本单（保留日期）</button>
     </div>
     <div class="btn-row">
       <button class="btn" onclick="exportPNG()">导出图片</button>
@@ -878,11 +878,8 @@ function mulDecimal(a,b){
 function roundDecimal(value,places){
   return Number((Number(value)||0).toFixed(places));
 }
-function formatLineAmount(value){
-  const rounded5=roundDecimal(value,5);
-  const rounded2=roundDecimal(value,2);
-  if(Math.abs(rounded5-rounded2)<1e-9)return rounded2.toFixed(2);
-  return rounded5.toFixed(5).replace(/0+$/,'').replace(/\.$/,'');
+function formatMoney(value,places=2){
+  return roundDecimal(value,places).toFixed(places);
 }
 
 // ---------- 预览渲染 ----------
@@ -934,17 +931,16 @@ async function snapExport(){
 function renderPreview(){
   collect();save();
   const factor=S.invoice?(Number(S.invoiceRate)||1):1;
+  const priceDigits=S.invoice?4:2;
   let total=0;
   const rows=S.items.map((it,i)=>{
     const q=Number(it.qty)||0,rawP=Number(it.price)||0,p=mulDecimal(rawP,factor);
-    const sub=mulDecimal(q,p);
-    total=roundDecimal(total+sub,5);
-    return `<tr><td>${i+1}</td><td class="name">${esc(it.name)||'&nbsp;'}</td><td>${q||''}</td><td>${esc(it.unit||'')}</td><td>${p?p.toFixed(5):''}</td><td>${sub?formatLineAmount(sub):''}</td></tr>`;
+    const subExact=mulDecimal(q,p);
+    const sub=roundDecimal(subExact,2);
+    total=roundDecimal(total+sub,2);
+    return `<tr><td>${i+1}</td><td class="name">${esc(it.name)||'&nbsp;'}</td><td>${q||''}</td><td>${esc(it.unit||'')}</td><td>${p?p.toFixed(priceDigits):''}</td><td>${subExact?formatMoney(sub):''}</td></tr>`;
   }).join('');
-  const totalRounded=roundDecimal(total,2);
-  const totalDisplayText=formatLineAmount(total);
-  const totalExact=totalDisplayText!==totalRounded.toFixed(2);
-  const totalCnLabel=totalExact?'人民币（大写，按分）':'人民币（大写）';
+  const totalDisplayText=formatMoney(total);
   const empty=Math.max(0,4-S.items.length);
   const pad=Array(empty).fill('<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('');
   const shopName=esc(S.shop)||'店铺名称';
@@ -974,7 +970,7 @@ function renderPreview(){
       <tbody>${rows}${pad}</tbody>
       <tfoot><tr><td colspan="5" style="text-align:right">合计 &nbsp;¥</td><td>${totalDisplayText}</td></tr></tfoot>
     </table>
-    <div class="total-cn"><span class="k">${totalCnLabel}</span><span class="v">${rmb(totalRounded)}</span></div>
+    <div class="total-cn"><span class="k">人民币（大写）</span><span class="v">${rmb(total)}</span></div>
     ${S.invoice?`<div class="total-cn" style="border-top:none"><span class="k">发票系数</span><span class="v">× ${Number(S.invoiceRate)||1}</span></div>`:''}
     ${S.invoice?`<div class="invoice-note">发票说明：${invoiceNote()}</div>`:''}
     <div class="remark">备注：${remarkText}</div>
@@ -1009,7 +1005,7 @@ function newOrder(){
   resetOrderState({preserveDate:false});
 }
 function clearCurrentOrder(){
-  if(!confirm('清空当前单据内容？会保留店铺信息、电话和日期。'))return;
+  if(!confirm('清空当前单据内容？会保留店铺信息、电话和日期，不会更新为今天。'))return;
   resetOrderState({preserveDate:true});
 }
 function validateBeforeExport(){
