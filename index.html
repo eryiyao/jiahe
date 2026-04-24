@@ -75,6 +75,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
 .btn.ghost:hover{box-shadow:var(--shadow-soft);background:#fff}
 .btn.sm{padding:7px 10px;font-size:12px;width:auto;margin-top:0}
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-row.single{grid-template-columns:1fr}
 .btn-row .btn{margin-top:0}
 .action-dock{margin-top:6px}
 .action-dock .btn-row + .btn-row{margin-top:10px}
@@ -88,29 +89,6 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
 .lib-list{overflow-y:auto;padding:8px 12px 16px;flex:1}
 .lib-row{display:grid;grid-template-columns:1fr 60px 70px 28px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px dashed #eee}
 .lib-row input{padding:7px 8px;font-size:13px}
-.sync-help{font-size:11.5px;color:var(--sub);line-height:1.55;margin:-4px 0 12px;padding:0 12px}
-.sync-card{padding:0;overflow:hidden}
-.sync-summary{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;background:linear-gradient(135deg,#fff7f2 0%,#f8e3d8 100%);border:none;border-bottom:1px solid rgba(168,70,30,.16);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
-.sync-summary-main{min-width:0}
-.sync-title{font-size:14px;font-weight:900;letter-spacing:.5px;line-height:1.2;color:var(--accent-deep)}
-.sync-subtitle{font-size:11.5px;color:#7a5f52;line-height:1.4;margin-top:3px}
-.sync-chevron{position:relative;width:42px;height:30px;border-radius:999px;border:1px solid rgba(168,70,30,.2);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 6px 14px rgba(168,70,30,.08);transition:background .18s ease,box-shadow .18s ease,transform .18s ease}
-.sync-chevron::before{content:"";width:8px;height:8px;border-right:2px solid var(--accent-deep);border-bottom:2px solid var(--accent-deep);transform:translateY(-2px) rotate(45deg);transition:transform .18s ease}
-.sync-summary:hover .sync-chevron{background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 8px 18px rgba(168,70,30,.12)}
-.sync-card.open .sync-chevron::before{transform:translateY(2px) rotate(225deg)}
-.sync-panel{display:none;padding:18px 16px 16px}
-.sync-card.open .sync-panel{display:block}
-.sync-card.open .sync-summary{border-bottom-color:rgba(168,70,30,.18)}
-.sync-panel > .btn{margin-top:12px}
-.sync-status{min-height:22px;margin-top:10px;padding:8px 10px;border-radius:9px;background:var(--surface);color:var(--sub);font-size:12px;line-height:1.45}
-.sync-status.ok{background:#f1f8f0;color:#357335;border:1px solid #cfe6cc}
-.sync-status.err{background:#fff4f1;color:#a8461e;border:1px solid #f0c7ba}
-.order-history{margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
-.order-history:empty{display:none}
-.order-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid #f1ece7}
-.order-row:last-child{border-bottom:none}
-.order-title{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.35;word-break:break-all}
-.order-meta{font-size:11px;color:var(--sub);margin-top:2px;word-break:break-all}
 .suggest{display:none;position:absolute;background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:240px;overflow-y:auto;z-index:200;min-width:200px;backdrop-filter:blur(10px)}
 .suggest.show{display:block}
 .suggest .s-item{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #f3f3f3}
@@ -187,35 +165,6 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
     </div>
     <div class="page-desc">填写客户、商品明细与开票信息，导出图片或 PDF 后即可直接发给客户。</div>
   </header>
-
-  <div id="syncCard" class="card sync-card">
-    <button class="sync-summary" type="button" onclick="toggleSyncPanel()">
-      <span class="sync-summary-main">
-        <span class="sync-title">订单同步</span>
-        <span class="sync-subtitle" id="syncSubtitle">保存到私有 GitHub 仓库，点开设置或读取历史</span>
-      </span>
-      <span class="sync-chevron" aria-hidden="true"></span>
-    </button>
-    <div class="sync-panel">
-      <div class="sync-help">先新建一个私有仓库，例如 jiahe-orders。Token 只保存在当前设备浏览器，不会写进网页代码。</div>
-      <div class="row">
-        <div><label>GitHub 用户名</label><input id="ghOwner" placeholder="例：eryiyao"></div>
-        <div><label>私有订单仓库</label><input id="ghRepo" placeholder="例：jiahe-orders"></div>
-      </div>
-      <div class="row">
-        <div><label>分支</label><input id="ghBranch" placeholder="main" value="main"></div>
-        <div><label>GitHub Token</label><input id="ghToken" type="password" autocomplete="off" placeholder="只存在本机"></div>
-      </div>
-      <div class="btn-row">
-        <button class="btn sec" onclick="saveGithubSyncSettings()">保存同步设置</button>
-        <button class="btn sec" onclick="refreshGithubOrders()">读取历史订单</button>
-      </div>
-      <button class="btn" onclick="saveGithubOrder()">保存当前订单到 GitHub</button>
-      <div id="syncStatus" class="sync-status">未配置同步。请填写私有仓库和 token 后保存设置。</div>
-      <div id="orderHistory" class="order-history"></div>
-    </div>
-  </div>
-
   <div class="card">
     <div class="card-head">
       <div>
@@ -346,9 +295,8 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   </div>
 
   <div class="action-dock">
-    <div class="btn-row">
+    <div class="btn-row single">
       <button class="btn ghost" onclick="newOrder()">再记一单</button>
-      <button class="btn ghost" onclick="clearCurrentOrder()">清空本单（保留日期）</button>
     </div>
     <div class="btn-row">
       <button class="btn" onclick="exportPNG()">导出图片</button>
@@ -542,235 +490,15 @@ function pickSuggest(itemIdx,libIdx){
 const S = {
   shop:'', phone:'', no:'', date:'', cust:'', remark:'', signer:'',
   invoice:false, invoiceRate:1.01,
-  githubPath:'',
   items:[]
 };
 const LS='chuhuodan_v1';
-const GH_SYNC_KEY='chuhuodan_github_sync_v1';
 const PREVIEW_SCALE=3;
 let previewMarkupHTML='';
 function blankItem(){return {name:'',qty:'',unit:'张',price:''}}
 
 function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(LS)||'{}');Object.assign(S,d)}catch(e){}}
-
-// ---------- GitHub 订单同步 ----------
-function syncStatus(msg,type=''){
-  const el=document.getElementById('syncStatus');
-  if(!el)return;
-  el.textContent=msg;
-  el.className='sync-status '+(type||'');
-}
-function toggleSyncPanel(force){
-  const card=document.getElementById('syncCard');
-  if(!card)return;
-  const open=typeof force==='boolean'?force:!card.classList.contains('open');
-  card.classList.toggle('open',open);
-}
-function updateSyncSubtitle(){
-  const cfg=readGithubSyncForm();
-  const el=document.getElementById('syncSubtitle');
-  if(!el)return;
-  el.textContent=(cfg.owner&&cfg.repo&&cfg.token)?('已配置：'+cfg.owner+'/'+cfg.repo):'保存到私有 GitHub 仓库，点开设置或读取历史';
-}
-function readGithubSyncForm(){
-  return {
-    owner:(document.getElementById('ghOwner')?.value||'').trim(),
-    repo:(document.getElementById('ghRepo')?.value||'').trim(),
-    branch:(document.getElementById('ghBranch')?.value||'main').trim()||'main',
-    token:(document.getElementById('ghToken')?.value||'').trim()
-  };
-}
-function fillGithubSyncForm(cfg){
-  if(document.getElementById('ghOwner'))document.getElementById('ghOwner').value=cfg.owner||'';
-  if(document.getElementById('ghRepo'))document.getElementById('ghRepo').value=cfg.repo||'jiahe-orders';
-  if(document.getElementById('ghBranch'))document.getElementById('ghBranch').value=cfg.branch||'main';
-  if(document.getElementById('ghToken'))document.getElementById('ghToken').value=cfg.token||'';
-  updateSyncSubtitle();
-}
-function loadGithubSyncSettings(){
-  let cfg={repo:'jiahe-orders',branch:'main'};
-  try{cfg=Object.assign(cfg,JSON.parse(localStorage.getItem(GH_SYNC_KEY)||'{}'))}catch(e){}
-  fillGithubSyncForm(cfg);
-  if(cfg.owner&&cfg.repo&&cfg.token)syncStatus('已读取本机同步设置，可保存或读取历史订单。','ok');
-}
-function saveGithubSyncSettings(quiet=false){
-  const cfg=readGithubSyncForm();
-  try{localStorage.setItem(GH_SYNC_KEY,JSON.stringify(cfg))}catch(e){}
-  updateSyncSubtitle();
-  if(!quiet)syncStatus('同步设置已保存在本机浏览器。','ok');
-  return cfg;
-}
-function requireGithubSettings(){
-  const cfg=saveGithubSyncSettings(true);
-  if(!cfg.owner)throw new Error('请填写 GitHub 用户名');
-  if(!cfg.repo)throw new Error('请填写私有订单仓库名');
-  if(!cfg.token)throw new Error('请填写 GitHub token');
-  return cfg;
-}
-function encodeGithubPath(path){
-  return String(path).split('/').map(encodeURIComponent).join('/');
-}
-async function githubRequest(apiPath,{method='GET',body=null,cfg=null}={}){
-  cfg=cfg||requireGithubSettings();
-  const url='https://api.github.com/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo)+apiPath;
-  const headers={
-    Accept:'application/vnd.github+json',
-    Authorization:'Bearer '+cfg.token,
-    'X-GitHub-Api-Version':'2022-11-28'
-  };
-  if(body)headers['Content-Type']='application/json';
-  const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined});
-  if(!res.ok){
-    let detail='';
-    try{const err=await res.json();detail=err.message||''}catch(e){}
-    const error=new Error(detail||('GitHub 请求失败：HTTP '+res.status));
-    error.status=res.status;
-    throw error;
-  }
-  return res.status===204?null:res.json();
-}
-async function githubGetContent(path,cfg){
-  const ref='?ref='+encodeURIComponent((cfg&&cfg.branch)||readGithubSyncForm().branch||'main');
-  return githubRequest('/contents/'+encodeGithubPath(path)+ref,{cfg});
-}
-function utf8ToBase64(str){
-  return btoa(unescape(encodeURIComponent(str)));
-}
-function base64ToUtf8(str){
-  return decodeURIComponent(escape(atob(String(str||'').replace(/\s/g,''))));
-}
-function safePathPart(value,fallback){
-  const s=String(value||fallback||'').trim().replace(/[\\/:*?"<>|]/g,'-').replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,60);
-  return s||fallback||'未命名';
-}
-function timestampId(){
-  const d=new Date();
-  return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+
-    String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');
-}
-function currentOrderPath(){
-  if(S.githubPath)return S.githubPath;
-  const date=S.date||todayStr();
-  const month=date.slice(0,7)||todayStr().slice(0,7);
-  const cust=safePathPart(S.cust,'客户');
-  const no=safePathPart(S.no,timestampId());
-  return 'orders/'+month+'/'+date+'_'+cust+'_'+no+'.json';
-}
-function currentOrderPayload(){
-  collect();
-  return {
-    schema:'jiahe-order-v1',
-    savedAt:new Date().toISOString(),
-    path:S.githubPath||currentOrderPath(),
-    order:{
-      shop:S.shop,phone:S.phone,no:S.no,date:S.date,cust:S.cust,
-      remark:S.remark,signer:S.signer,invoice:!!S.invoice,invoiceRate:S.invoiceRate,
-      tagShipped:!!S.tagShipped,tagUnpaid:!!S.tagUnpaid,
-      githubPath:S.githubPath||currentOrderPath(),
-      items:S.items.map(it=>Object.assign(blankItem(),it))
-    }
-  };
-}
-async function saveGithubOrder(){
-  try{
-    const cfg=requireGithubSettings();
-    collect();
-    const path=currentOrderPath();
-    const payload=currentOrderPayload();
-    payload.path=path;
-    payload.order.githubPath=path;
-    let existing=null;
-    try{existing=await githubGetContent(path,cfg)}catch(e){if(e.status!==404)throw e}
-    const body={
-      message:(existing?'Update':'Create')+' delivery order '+(S.no||S.cust||S.date||todayStr()),
-      content:utf8ToBase64(JSON.stringify(payload,null,2)),
-      branch:cfg.branch
-    };
-    if(existing&&existing.sha)body.sha=existing.sha;
-    const result=await githubRequest('/contents/'+encodeGithubPath(path),{method:'PUT',body,cfg});
-    S.githubPath=result&&result.content&&result.content.path?result.content.path:path;
-    save();
-    syncStatus('已保存到 GitHub：'+S.githubPath,'ok');
-    refreshGithubOrders(true);
-  }catch(e){
-    toggleSyncPanel(true);
-    syncStatus('保存失败：'+e.message,'err');
-  }
-}
-function applyGithubOrder(order,path){
-  S.shop=order.shop||'';
-  S.phone=order.phone||'';
-  S.no=order.no||'';
-  S.date=order.date||todayStr();
-  S.cust=order.cust||'';
-  S.remark=order.remark||'';
-  S.signer=order.signer||defaultSigner();
-  S.invoice=!!order.invoice;
-  S.invoiceRate=Number(order.invoiceRate)||1.01;
-  S.tagShipped=!!order.tagShipped;
-  S.tagUnpaid=!!order.tagUnpaid;
-  S.githubPath=path||order.githubPath||'';
-  S.items=Array.isArray(order.items)&&order.items.length?order.items.map(it=>Object.assign(blankItem(),it)):[blankItem(),blankItem()];
-  syncFormFromState();
-  syncInvoiceUI();
-  renderItems();
-  renderPreview();
-  save();
-}
-async function loadGithubOrder(path){
-  try{
-    const cfg=requireGithubSettings();
-    toggleSyncPanel(true);
-    syncStatus('正在读取订单：'+path);
-    const file=await githubGetContent(path,cfg);
-    const payload=JSON.parse(base64ToUtf8(file.content));
-    applyGithubOrder(payload.order||payload,path);
-    syncStatus('已载入订单：'+path,'ok');
-  }catch(e){
-    toggleSyncPanel(true);
-    syncStatus('读取失败：'+e.message,'err');
-  }
-}
-function renderGithubOrders(files){
-  const box=document.getElementById('orderHistory');
-  if(!box)return;
-  box.innerHTML='';
-  files.forEach(file=>{
-    const row=document.createElement('div');
-    row.className='order-row';
-    const info=document.createElement('div');
-    const title=document.createElement('div');
-    title.className='order-title';
-    title.textContent=(file.path.split('/').pop()||file.path).replace(/\.json$/,'');
-    const meta=document.createElement('div');
-    meta.className='order-meta';
-    meta.textContent=file.path;
-    info.appendChild(title);info.appendChild(meta);
-    const btn=document.createElement('button');
-    btn.className='btn sec sm';
-    btn.textContent='载入';
-    btn.onclick=()=>loadGithubOrder(file.path);
-    row.appendChild(info);row.appendChild(btn);
-    box.appendChild(row);
-  });
-}
-async function refreshGithubOrders(quiet=false){
-  try{
-    const cfg=requireGithubSettings();
-    if(!quiet)syncStatus('正在读取历史订单...');
-    const data=await githubRequest('/git/trees/'+encodeURIComponent(cfg.branch)+'?recursive=1',{cfg});
-    const files=(data.tree||[]).filter(x=>x.type==='blob'&&/^orders\/.+\.json$/.test(x.path))
-      .sort((a,b)=>b.path.localeCompare(a.path,'zh-Hans-CN')).slice(0,80);
-    renderGithubOrders(files);
-    if(!quiet)syncStatus(files.length?'已读取 '+files.length+' 张历史订单。':'还没有历史订单，先保存当前订单。','ok');
-  }catch(e){
-    if(!quiet){
-      toggleSyncPanel(true);
-      syncStatus('读取历史失败：'+e.message,'err');
-    }
-  }
-}
 
 // ---------- 单号 & 日期 ----------
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -983,15 +711,14 @@ function renderPreview(){
   document.getElementById('previewMobile').innerHTML=nextHTML;
 }
 
-function resetOrderState({preserveDate}){
+function resetOrderState(){
   S.no=defaultOrderNo();
-  if(!preserveDate)S.date=todayStr();
+  S.date=todayStr();
   S.cust='';
   S.remark='';
   S.tagShipped=false;S.tagUnpaid=false;
   S.signer=defaultSigner();
   S.invoice=false;
-  S.githubPath='';
   S.items=[blankItem(),blankItem()];
   syncFormFromState();
   hideSuggest();
@@ -1002,11 +729,7 @@ function resetOrderState({preserveDate}){
 }
 function newOrder(){
   if(!confirm('开始新的一单？会清空客户、明细、备注和开票状态。'))return;
-  resetOrderState({preserveDate:false});
-}
-function clearCurrentOrder(){
-  if(!confirm('清空当前单据内容？会保留店铺信息、电话和日期，不会更新为今天。'))return;
-  resetOrderState({preserveDate:true});
+  resetOrderState();
 }
 function validateBeforeExport(){
   collect();
@@ -1059,7 +782,6 @@ async function exportPDF(){
 // ---------- 初始化 ----------
 load();
 loadLib();
-loadGithubSyncSettings();
 S.remark=stripAutoInvoiceNote(S.remark);
 if(!S.shop)S.shop='加禾';
 if(!S.phone)S.phone='18902230236';
@@ -1072,9 +794,6 @@ if(S.items.length===0){S.items=[blankItem(),blankItem()]}
 syncFormFromState();
 ['shop','phone','no','date','cust','remark','signer'].forEach(k=>{
   const el=document.getElementById(k);if(el)el.addEventListener('input',renderPreview)
-});
-['ghOwner','ghRepo','ghBranch','ghToken'].forEach(k=>{
-  const el=document.getElementById(k);if(el)el.addEventListener('input',updateSyncSubtitle)
 });
 // 发票开关 & 系数
 const invEl=document.getElementById('invoice');
