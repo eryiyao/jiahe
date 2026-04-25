@@ -113,7 +113,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
 .preview-doc.mobile{width:100%;max-width:760px;margin:0 auto}
 .preview-doc::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 40%,var(--accent-deep) 100%)}
 .preview-doc .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-.preview-doc .brand-mark{width:38px;height:38px;background:var(--accent-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:serif;flex-shrink:0}
+.preview-doc .brand-mark{width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .preview-doc .brand-name{font-size:16px;font-weight:600;letter-spacing:3px;line-height:1.2}
 .preview-doc .brand-phone{font-size:11px;color:#777;letter-spacing:1px;margin-top:2px;font-family:-apple-system,sans-serif}
 .preview-doc .title-wrap{margin:22px 0 18px;display:flex;align-items:center;justify-content:center;gap:18px}
@@ -699,7 +699,7 @@ function renderPreview(){
   const remarkText=esc(remarkParts)||'&nbsp;';
   const nextHTML=`
     <div class="brand">
-      <div class="brand-mark"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/></svg></div>
+      <div class="brand-mark"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="var(--accent-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/></svg></div>
       <div class="brand-text">
         <div class="brand-name">${shopName}</div>
         <div class="brand-phone">TEL&nbsp;&nbsp;${esc(S.phone)||'—'}</div>
