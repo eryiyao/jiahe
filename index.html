@@ -36,7 +36,7 @@ html,body{
 .preview-section-title::before{background:linear-gradient(90deg,rgba(201,100,66,0),rgba(201,100,66,.72))}
 .preview-section-title::after{background:linear-gradient(90deg,rgba(201,100,66,.72),rgba(201,100,66,0))}
 .preview-section-title .section-title-label{padding:0;border:none;background:transparent;box-shadow:none;font-size:28px;letter-spacing:6px;color:var(--accent-deep)}
-.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-soft)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:var(--shadow-soft)}
 .preview-card{padding:0;overflow:hidden;border-color:#d6c8b0}
 .preview-stage{position:relative;padding:18px;background:var(--surface)}
 .preview-stage::before{content:none}
@@ -61,6 +61,10 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
 .row > div:focus-within > label:first-child,.field:focus-within > label{color:var(--accent-deep);letter-spacing:.2px}
 .check-option{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;min-height:48px}
 .check-option-text{flex:1;font-size:13px;font-weight:700;letter-spacing:.2px;color:var(--ink)}
+.tag-pills{display:flex;gap:8px;margin-bottom:10px}
+.tag-pill{display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;border:1px solid var(--line-strong);background:#fff;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s ease;user-select:none}
+.tag-pill:hover{border-color:var(--accent);color:var(--accent)}
+.tag-pill.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-deep);font-weight:700}
 .items .item{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:6px;margin-bottom:9px;align-items:center;padding:8px 10px;border:1px solid transparent;border-radius:12px;background:var(--surface);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
 .items .item:focus-within{border-color:rgba(201,100,66,.3);box-shadow:var(--shadow-soft);background:#fff}
 .items .item input,.items .item select{padding:8px 6px;font-size:14px;background:transparent;border-color:transparent;box-shadow:none}
@@ -161,7 +165,6 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
     <div class="page-eyebrow">开单工具</div>
     <div class="page-title-row">
       <div class="page-title">出货单</div>
-      <div class="page-chip">录入页</div>
     </div>
     <div class="page-desc">填写客户、商品明细与开票信息，导出图片或 PDF 后即可直接发给客户。</div>
   </header>
@@ -249,19 +252,15 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
         <div class="card-note">快递单号、地址或其他想展示在单据上的说明</div>
       </div>
     </div>
-    <div class="row" style="margin-bottom:8px">
-      <div>
-        <label class="check-option">
-          <input type="checkbox" id="tagShipped" style="width:auto;margin:0" onchange="updateTags()">
-          <span class="check-option-text">已发货</span>
-        </label>
-      </div>
-      <div>
-        <label class="check-option">
-          <input type="checkbox" id="tagUnpaid" style="width:auto;margin:0" onchange="updateTags()">
-          <span class="check-option-text">没收款</span>
-        </label>
-      </div>
+    <div class="tag-pills">
+      <label class="tag-pill" id="pillShipped">
+        <input type="checkbox" id="tagShipped" style="display:none" onchange="updateTags()">
+        已发货
+      </label>
+      <label class="tag-pill" id="pillUnpaid">
+        <input type="checkbox" id="tagUnpaid" style="display:none" onchange="updateTags()">
+        没收款
+      </label>
     </div>
     <div class="field">
       <label>备注</label>
@@ -282,11 +281,10 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
     </div>
   </div>
 
-  <div class="section-title preview-section-title"><span class="section-title-label">预览</span></div>
+  <div class="section-title"><span class="section-title-label">预览</span></div>
   <div class="card preview-card">
     <div class="preview-stage">
       <div id="previewMobile" class="preview-doc mobile"></div>
-      <div class="preview-tip">手机预览为手机版，导出仍是桌面版。</div>
     </div>
   </div>
 
@@ -546,6 +544,8 @@ function unitChg(i,v){
 function updateTags(){
   S.tagShipped=document.getElementById('tagShipped').checked;
   S.tagUnpaid=document.getElementById('tagUnpaid').checked;
+  document.getElementById('pillShipped').classList.toggle('active',S.tagShipped);
+  document.getElementById('pillUnpaid').classList.toggle('active',S.tagUnpaid);
   save();renderPreview();
 }
 function upd(i,k,v){S.items[i][k]=v;save();renderPreview()}
@@ -631,6 +631,8 @@ function syncFormFromState(){
   if(rate)rate.value=S.invoiceRate||1.01;
   const ts=document.getElementById('tagShipped');if(ts)ts.checked=!!S.tagShipped;
   const tu=document.getElementById('tagUnpaid');if(tu)tu.checked=!!S.tagUnpaid;
+  const ps=document.getElementById('pillShipped');if(ps)ps.classList.toggle('active',!!S.tagShipped);
+  const pu=document.getElementById('pillUnpaid');if(pu)pu.classList.toggle('active',!!S.tagUnpaid);
 }
 function syncInvoiceUI(){
   const inv=document.getElementById('invoice');
