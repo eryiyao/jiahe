@@ -206,7 +206,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
     </div>
     <div class="row full"><div><label>店铺抬头</label><textarea id="shop" class="line" rows="1" wrap="off" placeholder="例：小芳服饰辅料" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div></div>
     <div class="row">
-      <div><label>本店电话</label><input id="phone" type="tel" inputmode="tel" placeholder="联系电话" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+      <div><label>本店电话</label><textarea id="phone" class="line" rows="1" wrap="off" inputmode="tel" placeholder="联系电话" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div>
       <div><label>客户名称</label><textarea id="cust" class="line" rows="1" wrap="off" placeholder="客户名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div>
     </div>
     <div class="row">
@@ -223,7 +223,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
       </div>
       <div id="invoiceRateWrap" style="display:none">
         <label>发票系数</label>
-        <input id="invoiceRate" type="number" inputmode="decimal" step="0.0001" value="1.01" disabled>
+        <textarea id="invoiceRate" class="line" rows="1" wrap="off" inputmode="decimal" disabled>1.01</textarea>
       </div>
     </div>
   </div>
@@ -433,7 +433,7 @@ function renderLib(){
     <div class="lib-row">
       <textarea class="line" rows="1" wrap="off" placeholder="品名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="libUpd(${i},'name',this.value)">${esc(it.name)}</textarea>
       <textarea class="line" rows="1" wrap="off" placeholder="单位" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="libUpd(${i},'unit',this.value)">${esc(it.unit)}</textarea>
-      <input type="number" inputmode="decimal" step="0.00001" value="${it.price}" placeholder="单价" oninput="libUpd(${i},'price',this.value)">
+      <textarea class="line" rows="1" wrap="off" inputmode="decimal" placeholder="单价" oninput="libUpd(${i},'price',this.value)">${esc(String(it.price??''))}</textarea>
       <button class="del" onclick="libDel(${i})">×</button>
     </div>`).join('')||'<div style="padding:30px;text-align:center;color:#999;font-size:13px">还没有辅料，点上方"+ 新增"</div>';
 }
@@ -549,9 +549,9 @@ function renderItems(){
     const opts=UNITS.map(u=>`<option value="${u}" ${(!inList&&u==='自定义')||u===it.unit?'selected':''}>${u}</option>`).join('');
     row.innerHTML=`
       <textarea class="line" rows="1" wrap="off" placeholder="品名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i},true)" onblur="setTimeout(hideSuggest,200)">${esc(it.name)}</textarea>
-      <input type="number" inputmode="decimal" placeholder="数量" value="${it.qty}" oninput="upd(${i},'qty',this.value)">
+      <textarea class="line" rows="1" wrap="off" inputmode="decimal" placeholder="数量" oninput="upd(${i},'qty',this.value)">${esc(String(it.qty??''))}</textarea>
       <select onchange="unitChg(${i},this.value)">${opts}</select>
-      <input type="number" inputmode="decimal" step="0.00001" placeholder="单价" value="${it.price}" oninput="upd(${i},'price',this.value)">
+      <textarea class="line" rows="1" wrap="off" inputmode="decimal" placeholder="单价" oninput="upd(${i},'price',this.value)">${esc(String(it.price??''))}</textarea>
       <div class="row-actions">
         <button class="mv" onclick="moveItem(${i},-1)" ${i===0?'disabled':''} aria-label="上移"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 7.5 6 4 9.5 7.5"/></svg></button>
         <button class="mv" onclick="moveItem(${i},1)" ${i===S.items.length-1?'disabled':''} aria-label="下移"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg></button>
