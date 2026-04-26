@@ -160,8 +160,10 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   .preview-section-title .section-title-label{font-size:24px;letter-spacing:4px;padding:0}
   .btn-row{grid-template-columns:1fr}
   .lib-btn{padding:8px 10px;font-size:12px}
-  .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 60px}
-  .items .hdr{font-size:12px}
+  .items .item{grid-template-columns:1fr 60px 1fr 60px;row-gap:4px;column-gap:8px}
+  .items .item textarea[placeholder=品名]{font-size:15px;font-weight:500}
+  .items .item > *:first-child{grid-column:1 / -1}
+  .items .hdr{display:none}
   .preview-stage{padding:12px}
   .preview-doc.mobile{padding:28px 18px 22px}
   .preview-doc.mobile .title-wrap{gap:12px}
