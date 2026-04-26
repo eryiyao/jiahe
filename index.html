@@ -549,7 +549,7 @@ function renderItems(){
     const inList=UNITS.includes(it.unit);
     const opts=UNITS.map(u=>`<option value="${u}" ${(!inList&&u==='自定义')||u===it.unit?'selected':''}>${u}</option>`).join('');
     row.innerHTML=`
-      <textarea class="line" rows="1" wrap="off" placeholder="品名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i},true)" onblur="setTimeout(hideSuggest,200)">${esc(it.name)}</textarea>
+      <textarea class="line" rows="1" wrap="off" placeholder="品名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i})" onblur="setTimeout(hideSuggest,200)">${esc(it.name)}</textarea>
       <textarea class="line" rows="1" wrap="off" inputmode="decimal" placeholder="数量" oninput="upd(${i},'qty',this.value)">${esc(String(it.qty??''))}</textarea>
       <select onchange="unitChg(${i},this.value)">${opts}</select>
       <textarea class="line" rows="1" wrap="off" inputmode="decimal" placeholder="单价" oninput="upd(${i},'price',this.value)">${esc(String(it.price??''))}</textarea>
