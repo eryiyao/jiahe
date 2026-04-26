@@ -563,9 +563,10 @@ function renderItems(){
       const sel=row.querySelector('select');
       const custom=document.createElement('textarea');
       custom.className='line';custom.rows=1;custom.setAttribute('wrap','off');
-      custom.value=it.unit;custom.placeholder='单位';custom.style.cssText='padding:8px 4px;font-size:13px';custom.autocomplete='off';custom.autocorrect='off';custom.autocapitalize='off';custom.spellcheck=false;
-      custom.oninput=e=>{S.items[i].unit=e.target.value;save();renderPreview()};
-      custom.onblur=()=>{if(!custom.value.trim()){S.items[i].unit='张';save();renderItems();renderPreview()}};
+      custom.value=it.unit;custom.placeholder='单位';custom.autocomplete='off';custom.autocorrect='off';custom.autocapitalize='off';custom.spellcheck=false;
+      let emptyTimer;
+      custom.oninput=e=>{S.items[i].unit=e.target.value;save();renderPreview();clearTimeout(emptyTimer);if(e.target.value===''){emptyTimer=setTimeout(()=>{if(custom.value==='')custom.blur()},900)}};
+      custom.onblur=()=>{clearTimeout(emptyTimer);if(!custom.value.trim()){S.items[i].unit='张';save();renderItems();renderPreview()}};
       sel.replaceWith(custom);
     }
   });
