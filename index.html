@@ -203,13 +203,13 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
         <div class="card-note">店铺、客户与开票设置</div>
       </div>
     </div>
-    <div class="row full"><div><label>店铺抬头</label><input id="shop" placeholder="例：小芳服饰辅料"></div></div>
+    <div class="row full"><div><label>店铺抬头</label><input id="shop" placeholder="例：小芳服饰辅料" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div></div>
     <div class="row">
-      <div><label>本店电话</label><input id="phone" placeholder="联系电话"></div>
-      <div><label>客户名称</label><input id="cust" placeholder="客户名"></div>
+      <div><label>本店电话</label><input id="phone" type="tel" inputmode="tel" placeholder="联系电话" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+      <div><label>客户名称</label><input id="cust" placeholder="客户名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
     </div>
     <div class="row">
-      <div><label>出货单号</label><input id="no"></div>
+      <div><label>出货单号</label><input id="no" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
       <div><label>日期</label><input id="date" type="date"></div>
     </div>
     <div class="row full" id="invoiceRow">
@@ -305,7 +305,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
     </div>
     <div class="field">
       <label>经手人</label>
-      <input id="signer" placeholder="经手人姓名">
+      <input id="signer" placeholder="经手人姓名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
   </div>
 
@@ -430,8 +430,8 @@ function renderLib(){
   const box=document.getElementById('libList');
   box.innerHTML=LIB.map((it,i)=>`
     <div class="lib-row">
-      <input value="${esc(it.name)}" placeholder="品名" oninput="libUpd(${i},'name',this.value)">
-      <input value="${esc(it.unit)}" placeholder="单位" oninput="libUpd(${i},'unit',this.value)">
+      <input value="${esc(it.name)}" placeholder="品名" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="libUpd(${i},'name',this.value)">
+      <input value="${esc(it.unit)}" placeholder="单位" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="libUpd(${i},'unit',this.value)">
       <input type="number" inputmode="decimal" step="0.00001" value="${it.price}" placeholder="单价" oninput="libUpd(${i},'price',this.value)">
       <button class="del" onclick="libDel(${i})">×</button>
     </div>`).join('')||'<div style="padding:30px;text-align:center;color:#999;font-size:13px">还没有辅料，点上方"+ 新增"</div>';
@@ -547,7 +547,7 @@ function renderItems(){
     const inList=UNITS.includes(it.unit);
     const opts=UNITS.map(u=>`<option value="${u}" ${(!inList&&u==='自定义')||u===it.unit?'selected':''}>${u}</option>`).join('');
     row.innerHTML=`
-      <input placeholder="品名" value="${esc(it.name)}" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i},true)" onblur="setTimeout(hideSuggest,200)">
+      <input placeholder="品名" value="${esc(it.name)}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="upd(${i},'name',this.value);showSuggest(this,${i})" onfocus="showSuggest(this,${i},true)" onblur="setTimeout(hideSuggest,200)">
       <input type="number" inputmode="decimal" placeholder="数量" value="${it.qty}" oninput="upd(${i},'qty',this.value)">
       <select onchange="unitChg(${i},this.value)">${opts}</select>
       <input type="number" inputmode="decimal" step="0.00001" placeholder="单价" value="${it.price}" oninput="upd(${i},'price',this.value)">
@@ -560,7 +560,7 @@ function renderItems(){
     if(!inList){
       const sel=row.querySelector('select');
       const custom=document.createElement('input');
-      custom.value=it.unit;custom.placeholder='单位';custom.style.cssText='padding:8px 4px;font-size:13px';
+      custom.value=it.unit;custom.placeholder='单位';custom.style.cssText='padding:8px 4px;font-size:13px';custom.autocomplete='off';custom.autocorrect='off';custom.autocapitalize='off';custom.spellcheck=false;
       custom.oninput=e=>{S.items[i].unit=e.target.value;save();renderPreview()};
       custom.onblur=()=>{if(!custom.value.trim()){S.items[i].unit='张';save();renderItems();renderPreview()}};
       sel.replaceWith(custom);
