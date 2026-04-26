@@ -68,12 +68,18 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
 .tag-pill{display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;border:1px solid var(--line-strong);background:#fff;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s ease;user-select:none}
 .tag-pill:hover{border-color:var(--accent);color:var(--accent)}
 .tag-pill.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-deep);font-weight:700}
-.items .item{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:6px;margin-bottom:9px;align-items:center;padding:8px 10px;border:1px solid transparent;border-radius:12px;background:var(--surface);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.items .item{display:grid;grid-template-columns:1fr 60px 58px 68px 64px;gap:6px;margin-bottom:9px;align-items:center;padding:8px 10px;border:1px solid transparent;border-radius:12px;background:var(--surface);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
 .items .item:focus-within{border-color:rgba(201,100,66,.3);box-shadow:var(--shadow-soft);background:#fff}
 .items .item input,.items .item select{padding:8px 6px;font-size:14px;background:transparent;border-color:transparent;box-shadow:none}
-.items .hdr{display:grid;grid-template-columns:1fr 60px 58px 68px 28px;gap:6px;font-size:13px;font-weight:700;color:#62594d;margin-bottom:7px;padding:0 11px;border:1px solid transparent;letter-spacing:.2px}
+.items .hdr{display:grid;grid-template-columns:1fr 60px 58px 68px 64px;gap:6px;font-size:13px;font-weight:700;color:#62594d;margin-bottom:7px;padding:0 11px;border:1px solid transparent;letter-spacing:.2px}
 .items .hdr div{padding-left:6px}
-.del{background:#fef5f3;border:1px solid #e8d5cf;border-radius:8px;height:36px;font-size:18px;color:#c96442;cursor:pointer}
+.del{background:#fef5f3;border:1px solid #e8d5cf;border-radius:8px;height:36px;font-size:18px;color:#c96442;cursor:pointer;padding:0}
+.row-actions{display:flex;gap:3px;align-items:center;height:36px}
+.row-actions .mv{flex:1;background:#fff;border:1px solid var(--line);border-radius:6px;height:36px;color:#62594d;cursor:pointer;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.row-actions .mv svg{width:12px;height:12px;display:block}
+.row-actions .mv:hover:not(:disabled){border-color:var(--accent);color:var(--accent-deep)}
+.row-actions .mv:disabled{opacity:.3;cursor:not-allowed}
+.row-actions .del{flex:0 0 26px;font-size:16px}
 .btn{background:var(--accent);color:#fff;border:1px solid var(--accent-deep);border-radius:10px;padding:12px 16px;font-size:14.5px;font-weight:600;cursor:pointer;width:100%;margin-top:6px;box-shadow:0 1px 3px rgba(0,0,0,.1);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
 .btn:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(201,100,66,.25);background:#d4724f}
 .btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line-strong);box-shadow:var(--shadow-soft)}
@@ -152,7 +158,7 @@ input:disabled{background:#f2efeb;color:#9a9590;cursor:not-allowed}
   .preview-section-title .section-title-label{font-size:24px;letter-spacing:4px;padding:0}
   .btn-row{grid-template-columns:1fr}
   .lib-btn{padding:8px 10px;font-size:12px}
-  .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 26px}
+  .items .item,.items .hdr{grid-template-columns:1fr 50px 48px 58px 60px}
   .items .hdr{font-size:12px}
   .preview-stage{padding:12px}
   .preview-doc.mobile{padding:28px 18px 22px}
@@ -545,7 +551,11 @@ function renderItems(){
       <input type="number" inputmode="decimal" placeholder="数量" value="${it.qty}" oninput="upd(${i},'qty',this.value)">
       <select onchange="unitChg(${i},this.value)">${opts}</select>
       <input type="number" inputmode="decimal" step="0.00001" placeholder="单价" value="${it.price}" oninput="upd(${i},'price',this.value)">
-      <button class="del" onclick="delItem(${i})">×</button>`;
+      <div class="row-actions">
+        <button class="mv" onclick="moveItem(${i},-1)" ${i===0?'disabled':''} aria-label="上移"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 7.5 6 4 9.5 7.5"/></svg></button>
+        <button class="mv" onclick="moveItem(${i},1)" ${i===S.items.length-1?'disabled':''} aria-label="下移"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg></button>
+        <button class="del" onclick="delItem(${i})" aria-label="删除">×</button>
+      </div>`;
     box.appendChild(row);
     if(!inList){
       const sel=row.querySelector('select');
@@ -570,6 +580,7 @@ function updateTags(){
 }
 function upd(i,k,v){S.items[i][k]=v;save();renderPreview()}
 function delItem(i){S.items.splice(i,1);save();renderItems();renderPreview()}
+function moveItem(i,dir){const j=i+dir;if(j<0||j>=S.items.length)return;const t=S.items[i];S.items[i]=S.items[j];S.items[j]=t;save();renderItems();renderPreview()}
 function esc(s){return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 
 // ---------- 金额大写 ----------
